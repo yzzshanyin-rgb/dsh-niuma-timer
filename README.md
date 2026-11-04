@@ -27,11 +27,6 @@ DeepSeek Harness（DSH）插件：在输入框下方挂一张手帐风格的小�
 
 配置写在页面 `localStorage` 的 `dsh-niuma-timer.v1` 键下，不经过 Host、不上传。清空方式：卡片内改成默认值再保存，或在开发者工具里删除该键。
 
-## 截图
-
-| 收起态 | 展开态 | 展开态 · 改数据 |
-|---|---|---|
-| ![收起态](assets/screenshots/preview-dark.png) | ![展开态](assets/screenshots/preview-open.png) | ![改数据](assets/screenshots/preview-settings.png) |
 
 ## 安装
 
