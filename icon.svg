@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Niuma work-yield timer">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- journal sheet -->
+    <path d="M11 9.5h42a3.5 3.5 0 0 1 3.5 3.5v38a3.5 3.5 0 0 1-3.5 3.5H11a3.5 3.5 0 0 1-3.5-3.5V13A3.5 3.5 0 0 1 11 9.5z"
+          fill="#FBF5E8" stroke="#332F2A" stroke-width="2.6"/>
+    <!-- ruled lines -->
+    <path d="M15 20.5h34M15 51.5h22" stroke="#BBD3DE" stroke-width="2"/>
+    <!-- washi tape -->
+    <path d="M20 6.5l22 2.2-1.4 7.6-22-2.2z" fill="#EABF5C" opacity=".62"/>
+    <!-- yen mark -->
+    <path d="M25 25.5l7 9 7-9M32 34.5v12M25.5 39.5h13M25.5 44h13"
+          stroke="#332F2A" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- red stamp -->
+    <circle cx="47" cy="43" r="8.5" fill="none" stroke="#D2605A" stroke-width="2.4" opacity=".92"/>
+    <path d="M43.4 43.2l2.6 2.6 5-5.4" stroke="#D2605A" stroke-width="2.4"/>
+  </g>
+</svg>

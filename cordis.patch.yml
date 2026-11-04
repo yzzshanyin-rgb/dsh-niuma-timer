@@ -1,0 +1,6 @@
+# dsh-niuma-timer bundle patch: inserts the plugin row into the profile roster.
+# The row id is what a user overrides in the profile's own cordis.patch.yml;
+# the row name must stay the package name.
+- insert:
+    - id: niuma-timer
+      name: 'dsh-niuma-timer'
