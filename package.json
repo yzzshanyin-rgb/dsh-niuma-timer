@@ -1,6 +1,6 @@
 {
   "name": "dsh-niuma-timer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "type": "module",
   "description": "牛马费用计时器 — 输入月薪与上下班时间，实时显示今天已挣多少牛马费、本月累计多少，手帐风格贴在输入框下方。",

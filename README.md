@@ -7,7 +7,7 @@ DeepSeek Harness（DSH）插件：在输入框下方挂一张手帐风格的小�
 | 位置 | 内容 |
 |---|---|
 | 收起态 | 一枚米黄纸片小胶囊：`● 牛马费 ¥398.55 · 今日 70% · 本月 ¥1,541.40`（主行是「状态点 + 牛马费 + 今日金额」，次要行是「今日进度 · 本月累计」，窄屏时次要行自动隐藏）<br>与宿主原生的 `activity` / `usage` 统计胶囊**同排**显示：胶囊按内容占宽、互不挤压，宽度不够时整行自然换行，任一方都不会被裁掉 |
-| 展开态（点击胶囊） | 手帐卡片：今日金额大字、每秒进账、已上/还剩、手绘进度条、日薪/时薪/秒薪三格、工作日打卡点阵、本月累计与月薪进度 |
+| 展开态（点击胶囊） | 手帐卡片：今日金额大字、每秒进账、已上/还剩、手绘进度条、日薪/时薪/秒薪三格、工作日打卡点阵、本月累计与月薪进度<br>卡片是**半透明浮层**（`position: fixed` + `backdrop-filter` 磨砂），从胶囊处向上浮起、盖在对话区之上，**不占布局空间**：输入框和对话列的高度、位置都不会因为展开而变化 |
 | 展开态 →「改数据」 | 月薪（到手）、上班、下班、午休开始、午休时长、本月应出勤天数（0 = 按周一到周五自动算） |
 
 状态章会自动切换：**打工中 / 午休中 / 已下班 / 无偿加班 / 未开工 / 休息日**；下班后仍在工位时，卡片显示「白干 X 小时 X 分」，金额封顶不再增长。
@@ -72,13 +72,14 @@ dsh plugin --profile desktop add /绝对路径/dsh-niuma-timer
 
 - `npm pack` 前先确认 `package.json` 的 `version` 已递增；
 - 本地联调可用 `dsh plugin --profile desktop add /绝对路径/dsh-niuma-timer`（走 `link:`，改完刷新即生效）；
-- 用 tarball 预检：`dsh plugin --profile desktop add "file:/绝对路径/dsh-niuma-timer-1.0.0.tgz"`。
+- 用 tarball 预检：`dsh plugin --profile desktop add "file:/绝对路径/dsh-niuma-timer-1.1.0.tgz"`。
 
 ## 实现说明
 
 - Host 半（`index.js`）只有 `export function apply() {}`：插件是纯客户端渲染，无工具、无事件、无后台任务。
 - Client 半（`client.js`）走 `window.__ModuleLoader__` 模块表，`inject: ['slots']`，注册到 `conversation.composer.dock`（`order: 60`）。
-- 不 import 任何 Harness Client 包，只取 shell 模块表里的 `react`；样式通过 `ctx.effect` 注入 `<style data-dsh-niuma-timer>`，卸载时自动移除。
+- 不 import 任何 Harness Client 包，只取 shell 模块表里的 `react`（`react-dom` 仅用于可选的门户，缺失时自动回退为原地渲染）；样式通过 `ctx.effect` 注入 `<style data-dsh-niuma-timer>`，卸载时自动移除。
+- 展开面板用 `ReactDOM.createPortal` 挂到 `document.body` 下的 `.nt-layer`，位置由胶囊的 `getBoundingClientRect()` 实时换算成 CSS 变量（左/宽/上/最大高/尾巴位置），`resize` 与 `scroll` 时重算；`Esc`、点击面板外部都会收起。dock 里始终只有收起态胶囊，所以展开不会改变任何布局尺寸。
 - 字体：内嵌霞鹜文楷（LXGW WenKai，SIL OFL 1.1）的 246 字子集（woff2，34KB），只用于本插件容器，不污染宿主 UI。
 - 容器与控件颜色为纸感固定色（浅色纸 + 深墨字），在浅色/深色主题下都保持可读；焦点态回落到宿主 `--dsw-alias-brand-primary`。
 - 文案中英双语，跟随 DSH 语言设置，回落到 `<html lang>`。
