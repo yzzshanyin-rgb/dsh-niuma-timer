@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Niuma Work-Yield Timer",
-    "description": "A hand-drawn journal card under the composer: enter your monthly pay and working hours to watch today's earnings tick up, with day/hour/second rates, the month-to-date total, and a workday check-in grid."
+    "description": "A hand-drawn journal card under the composer: enter your monthly pay and working hours to watch today's earnings tick up. The collapsed chip is a configurable mini dashboard with three layouts (minimal, full, playful), per-field toggles, a hide-amounts mode, position and density settings, and one-click hide."
   }
 }

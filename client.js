@@ -32,7 +32,41 @@ window.__ModuleLoader__.load({
       end: '18:00',
       breakStart: '12:00',
       breakMin: 60,
-      workdays: 0
+      workdays: 0,
+      // ---- 迷你仪表盘显示设置 ----
+      mode: 'full',        // 'mini' | 'full' | 'fun'
+      hideMoney: false,    // 隐藏所有金额，只留工作进度
+      hidden: false,       // 一键隐藏胶囊（留一个极小的恢复点）
+      place: 'center',     // 'left' | 'center' | 'right'
+      density: 'cozy',     // 'compact' | 'cozy'
+      fields: {
+        amount: true,
+        progress: true,
+        month: true,
+        status: true,
+        remain: true,
+        rate: false
+      }
+    }
+
+    /** 显示模式与字段：顺序即渲染顺序。 */
+    var MODES = ['mini', 'full', 'fun']
+    var FIELD_IDS = ['amount', 'progress', 'month', 'status', 'remain', 'rate']
+    var PLACES = ['left', 'center', 'right']
+    var DENSITIES = ['compact', 'cozy']
+
+    /** 合并保存的配置：深拷贝 DEFAULTS（fields 是嵌套对象，不能共享引用）。 */
+    function cloneDefaults() {
+      var out = {}
+      for (var k in DEFAULTS) {
+        if (k === 'fields') {
+          out.fields = {}
+          for (var f in DEFAULTS.fields) { out.fields[f] = DEFAULTS.fields[f] }
+        } else {
+          out[k] = DEFAULTS[k]
+        }
+      }
+      return out
     }
 
     /** Host context captured in `apply`, read by the components for locale. */
@@ -87,7 +121,45 @@ window.__ModuleLoader__.load({
         errDays: '应出勤天数填 0–31',
         unitH: '小时',
         unitM: '分',
-        foot: '按到手月薪折算，法定节假日请手动改应出勤天数'
+        foot: '按到手月薪折算，法定节假日请手动改应出勤天数',
+
+        // ---- 迷你仪表盘 ----
+        mode: '显示方案',
+        modeMini: '极简',
+        modeFull: '完整',
+        modeFun: '趣味',
+        modeMiniHint: '一行数字 + 进度',
+        modeFullHint: '金额、进度条、本月与状态',
+        modeFunHint: '大金额 + 状态章 + 文案',
+        miniToday: '今日已赚',
+        miniProgress: '今日进度',
+        funLabel: '今日打工收益',
+        funTicking: '每秒收入持续增加中…',
+        funFrozen: '今日收益已封顶',
+        funToday: '今日打工收益',
+        remainBadge: '距离解放还有 {t}',
+        remainBadgeDone: '已经解放啦',
+        remainBadgeOt: '白干 {t}',
+        densityLabel: '显示密度',
+        densityCompact: '紧凑',
+        densityCozy: '舒适',
+        placeLabel: '胶囊位置',
+        placeLeft: '靠左',
+        placeCenter: '居中',
+        placeRight: '靠右',
+        fieldsLabel: '显示哪些数字',
+        fieldAmount: '今日金额',
+        fieldProgress: '今日进度',
+        fieldMonth: '本月累计',
+        fieldStatus: '状态章',
+        fieldRemain: '下班倒计时',
+        fieldRate: '每秒进账',
+        hideMoneyLabel: '隐藏金额（只显示进度）',
+        hideChipLabel: '隐藏胶囊',
+        hideChipHint: '隐藏后右下角会出现一个小圆点，点它回来',
+        showChip: '显示牛马费胶囊',
+        displayTitle: '显示设置',
+        moneyHidden: '金额已隐藏'
       },
       en: {
         chipLabel: 'Work-yield',
@@ -137,7 +209,45 @@ window.__ModuleLoader__.load({
         errDays: 'Workdays must be 0–31',
         unitH: 'h',
         unitM: 'm',
-        foot: 'Based on net pay; adjust workdays for holidays'
+        foot: 'Based on net pay; adjust workdays for holidays',
+
+        // ---- mini dashboard ----
+        mode: 'Layout',
+        modeMini: 'Minimal',
+        modeFull: 'Full',
+        modeFun: 'Playful',
+        modeMiniHint: 'one figure plus progress',
+        modeFullHint: 'amount, bar, month and status',
+        modeFunHint: 'big amount, badge, caption',
+        miniToday: 'Earned today',
+        miniProgress: 'progress',
+        funLabel: "Today's work yield",
+        funTicking: 'Still ticking up…',
+        funFrozen: "Capped for today",
+        funToday: "Today's work yield",
+        remainBadge: '{t} until freedom',
+        remainBadgeDone: 'Already free',
+        remainBadgeOt: '{t} unpaid',
+        densityLabel: 'Density',
+        densityCompact: 'Compact',
+        densityCozy: 'Cozy',
+        placeLabel: 'Chip position',
+        placeLeft: 'Left',
+        placeCenter: 'Center',
+        placeRight: 'Right',
+        fieldsLabel: 'Which figures to show',
+        fieldAmount: "Today's amount",
+        fieldProgress: "Today's progress",
+        fieldMonth: 'This month',
+        fieldStatus: 'Status badge',
+        fieldRemain: 'Time left',
+        fieldRate: 'Per second',
+        hideMoneyLabel: 'Hide amounts (progress only)',
+        hideChipLabel: 'Hide the chip',
+        hideChipHint: 'A small dot stays in the bottom-right corner — click it to bring the chip back',
+        showChip: 'Show the work-yield chip',
+        displayTitle: 'Display',
+        moneyHidden: 'Amounts hidden'
       }
     }
 
@@ -163,23 +273,61 @@ window.__ModuleLoader__.load({
     }
 
     // ---------- storage ----------
+    function oneOf(value, allowed, fallback) {
+      return allowed.indexOf(value) >= 0 ? value : fallback
+    }
+
     function readCfg() {
-      var out = {}
-      for (var k in DEFAULTS) { out[k] = DEFAULTS[k] }
+      var out = cloneDefaults()
       try {
         var raw = localStorage.getItem(STORE_KEY)
         if (raw) {
           var saved = JSON.parse(raw)
           for (var key in out) {
+            if (key === 'fields') { continue }
             if (saved[key] !== undefined && saved[key] !== null && saved[key] !== '') { out[key] = saved[key] }
+          }
+          if (saved.fields && typeof saved.fields === 'object') {
+            for (var f in out.fields) {
+              if (typeof saved.fields[f] === 'boolean') { out.fields[f] = saved.fields[f] }
+            }
           }
         }
       } catch (e) { /* keep defaults */ }
+      // 枚举值做一次白名单校正：旧版本存下的或手改坏的值不该让界面崩掉。
+      out.mode = oneOf(out.mode, MODES, 'full')
+      out.place = oneOf(out.place, PLACES, 'center')
+      out.density = oneOf(out.density, DENSITIES, 'cozy')
+      out.hideMoney = out.hideMoney === true
+      out.hidden = out.hidden === true
       return out
     }
 
     function writeCfg(cfg) {
       try { localStorage.setItem(STORE_KEY, JSON.stringify(cfg)) } catch (e) { /* ignore */ }
+    }
+
+    /** 合并更新：浅合并顶层，fields 深合并，避免调用方漏字段时丢设置。 */
+    function mergeCfg(base, patch) {
+      var next = {}
+      for (var k in base) {
+        next[k] = (k === 'fields') ? null : base[k]
+      }
+      next.fields = {}
+      for (var f in base.fields) { next.fields[f] = base.fields[f] }
+      for (var key in patch) {
+        if (key === 'fields' && patch.fields && typeof patch.fields === 'object') {
+          for (var fid in patch.fields) {
+            if (fid in next.fields) { next.fields[fid] = !!patch.fields[fid] }
+          }
+        } else if (key in next) {
+          next[key] = patch[key]
+        }
+      }
+      next.mode = oneOf(next.mode, MODES, 'full')
+      next.place = oneOf(next.place, PLACES, 'center')
+      next.density = oneOf(next.density, DENSITIES, 'cozy')
+      return next
     }
 
     // ---------- time helpers ----------
@@ -339,6 +487,82 @@ window.__ModuleLoader__.load({
       '.nt-chip-sub{color:#6D6558;white-space:nowrap}',
       '.nt-caret{color:#8A8275;font-size:10px;transform:translateY(1px)}',
 
+      /* ---------- 三种显示方案 ----------
+         A 极简：一行 `● 今日已赚 ¥398.55 —— 70%`，金额与进度分列两端。
+         B 完整：两行 —— 主行「牛马费 ¥398.55 · 状态章」，次行进度条 + 本月。
+         C 趣味：主行「🐮 今日打工收益 · 距解放倒计时」，金额换行放大，底部一句状态文案。
+         三种都遵守同一个横向预算：flex:0 1 auto + min-width:0，不抢原生胶囊的位置。 */
+      '.nt-chip--mini{gap:10px;padding:5px 14px 6px}',
+      '.nt-chip--mini .nt-mini-main{display:inline-flex;align-items:center;gap:7px;min-width:0}',
+      '.nt-chip--mini .nt-mini-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:-.2px}',
+      '.nt-chip--mini .nt-mini-track{display:block;flex:0 0 auto;width:52px;height:5px;border-radius:3px;overflow:hidden;background:#D9D2BE}',
+      '.nt-chip--mini .nt-mini-fill{display:block;height:100%;border-radius:3px;background:#7FA36B;transition:width .3s ease}',
+      '.nt-chip--mini .nt-mini-pct{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;color:#6D6558;min-width:30px;text-align:right}',
+
+      '.nt-chip--full{position:relative;flex-direction:column;align-items:stretch;gap:3px;padding:6px 13px 7px;min-width:232px}',
+      '.nt-chip--full .nt-full-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}',
+      '.nt-chip--full .nt-full-left{display:inline-flex;align-items:baseline;gap:7px;min-width:0;overflow:hidden}',
+      '.nt-chip--full .nt-full-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}',
+      '.nt-chip--full .nt-full-right{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}',
+      '.nt-chip--full .nt-full-badge{flex:0 0 auto;padding:1px 8px;font-size:10.5px;letter-spacing:.6px;border-radius:999px;background:rgba(127,163,107,.18);color:#4F6B3E;border:1px solid rgba(127,163,107,.4);white-space:nowrap}',
+      '.nt-chip--full .nt-full-badge.grey{background:rgba(138,130,117,.14);color:#6D6558;border-color:rgba(138,130,117,.34)}',
+      '.nt-chip--full .nt-full-badge.red{background:rgba(210,96,90,.14);color:#9C3F3A;border-color:rgba(210,96,90,.36)}',
+      '.nt-chip--full .nt-full-bar{display:flex;align-items:center;gap:8px;min-width:0;width:100%}',
+      '.nt-chip--full .nt-full-notes{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;width:100%}',
+      '.nt-chip--full .nt-full-track{display:block;flex:1 1 auto;min-width:56px;height:5px;border-radius:3px;overflow:hidden;background:#D9D2BE}',
+      '.nt-chip--full .nt-full-fill{display:block;height:100%;border-radius:3px;background-color:#7FA36B;background-image:repeating-linear-gradient(45deg,#7FA36B 0 4px,#96B884 4px 8px);transition:width .3s ease}',
+      '.nt-chip--full .nt-full-note{flex:0 0 auto;font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;font-variant-numeric:tabular-nums;color:#6D6558;white-space:nowrap}',
+
+      '.nt-chip--fun{position:relative;flex-direction:column;align-items:stretch;gap:2px;padding:7px 14px 8px;background-color:#FBF3E0;background-image:none}',
+      '.nt-chip--fun .nt-fun-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}',
+      '.nt-chip--fun .nt-fun-label{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#6D6558;letter-spacing:.6px;white-space:nowrap}',
+      '.nt-chip--fun .nt-fun-right{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}',
+      '.nt-chip--fun .nt-fun-badge{flex:0 0 auto;padding:1px 9px;font-size:10.5px;letter-spacing:.4px;border-radius:999px;background:rgba(210,96,90,.15);color:#9C3F3A;border:1px solid rgba(210,96,90,.32);white-space:nowrap}',
+      '.nt-chip--fun .nt-fun-badge.grey{background:rgba(138,130,117,.13);color:#6D6558;border-color:rgba(138,130,117,.3)}',
+      '.nt-chip--fun .nt-fun-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:800;font-size:19px;line-height:1.25;font-variant-numeric:tabular-nums;letter-spacing:-.4px}',
+      '.nt-chip--fun .nt-fun-caption{font-size:10.5px;color:#8A8275;letter-spacing:.3px}',
+
+      /* 隐藏金额时（hideMoney）：所有金额节点整体收起，进度/时间接管主位 */
+      '.nt-chip[data-hide-money="true"] .nt-money{display:none}',
+      '.nt-progress-lead{font-variant-numeric:tabular-nums}',
+
+      /* 密度：紧凑只留一行、字号降一档；舒适是默认值 */
+      '.nt-chip[data-density="compact"]{padding:2px 10px 3px;gap:7px;font-size:11.5px}',
+      /* 极窄视口（分栏/手机竖屏）不能让固定最小宽度撑破 dock */
+      '@media (max-width:380px){.nt-chip--full{min-width:0}}',
+      '.nt-chip[data-density="compact"] .nt-chip-val,.nt-chip[data-density="compact"] .nt-mini-amount{font-size:12.5px}',
+      '.nt-chip[data-density="compact"] .nt-chip-line,.nt-chip[data-density="compact"] .nt-fun-caption,.nt-chip[data-density="compact"] .nt-full-bar{display:none}',
+
+      /* 位置：只改 nt-wrap 在 dock 里的 align-self，不动宿主容器 */
+      '.nt-wrap[data-place="left"]{align-self:flex-start}',
+      '.nt-wrap[data-place="center"]{align-self:center}',
+      '.nt-wrap[data-place="right"]{align-self:flex-end}',
+
+      /* 一键隐藏后留下的恢复圆点：极小、半透明，悬停浮现 */
+      '.nt-dot-restore{position:fixed;right:14px;bottom:12px;width:22px;height:22px;padding:0;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;color:#6D6558;background:rgba(251,245,232,.72);border:1.4px dashed rgba(51,47,42,.4);border-radius:50%;cursor:pointer;z-index:29;opacity:.5;transition:opacity .15s ease,transform .15s ease;font-family:"NT WenKai","Kaiti SC",system-ui,sans-serif}',
+      '.nt-dot-restore:hover,.nt-dot-restore:focus-visible{opacity:1;transform:scale(1.08);outline:none;border-style:solid}',
+
+      /* 显示设置里的分段控件与开关 */
+      '.nt-seg{display:inline-flex;flex:1 1 auto;min-width:0;gap:3px;padding:2px;border:1.4px solid rgba(51,47,42,.4);border-radius:9px;background:rgba(255,253,246,.6)}',
+      '.nt-seg button{flex:1 1 0;min-width:0;padding:3px 6px;font-family:inherit;font-size:11.5px;color:#6D6558;background:none;border:0;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background-color .12s ease,color .12s ease}',
+      '.nt-seg button:hover{color:#332F2A}',
+      '.nt-seg button[aria-pressed="true"]{background:#EABF5C;color:#332F2A;font-weight:700}',
+      '.nt-seg button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2563eb);outline-offset:1px}',
+      '.nt-rowseg{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-width:0}',
+      '.nt-rowseg>label{flex:0 0 auto;font-size:11px;color:#6D6558;letter-spacing:1.1px}',
+      '.nt-checks{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:2px 0 10px}',
+      '.nt-check{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#4A443B;cursor:pointer;min-width:0}',
+      '.nt-check input{flex:0 0 auto;margin:0;accent-color:#7FA36B}',
+      '.nt-check span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nt-switch{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#4A443B;cursor:pointer;margin:0 0 7px}',
+      '.nt-switch input{flex:0 0 auto;margin:0;accent-color:#7FA36B}',
+      '.nt-modes{display:flex;gap:6px;margin:0 0 4px}',
+      '.nt-modes>button{flex:1 1 0;min-width:0;padding:6px 4px;font-family:inherit;font-size:11.5px;line-height:1.3;color:#6D6558;background:rgba(255,253,246,.6);border:1.4px solid rgba(51,47,42,.4);border-radius:9px 11px 9px 12px/11px 9px 12px 9px;cursor:pointer;transition:border-color .12s ease,background-color .12s ease}',
+      '.nt-modes>button:hover{border-color:rgba(51,47,42,.7)}',
+      '.nt-modes>button[aria-pressed="true"]{border-color:#332F2A;background:rgba(234,191,92,.5);color:#332F2A;font-weight:700}',
+      '.nt-modes>button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2563eb);outline-offset:1px}',
+      '.nt-modehint{font-size:10.5px;color:#9A9285;margin:0 0 10px;min-height:13px}',
+
       /* floating layer: 展开后的整块内容都活在这里。它是 body 的直系子节点
          （ReactDOM.createPortal），position:fixed + inset:0 盖住视口，pointer-events:none
          让它对文档零侵入；只有卡片本身接收指针事件。层级低于宿主自己的 popover/dialog。 */
@@ -382,7 +606,9 @@ window.__ModuleLoader__.load({
       '.nt-day.done{background-color:#7FA36B;background-image:repeating-linear-gradient(45deg,#7FA36B 0 3px,#96B884 3px 6px);border-color:rgba(51,47,42,.5)}',
       '.nt-day.today{background-color:#EABF5C;border-color:#332F2A;box-shadow:0 0 0 2px rgba(234,191,92,.35)}',
       '.nt-day.pending{background:repeating-linear-gradient(45deg,rgba(51,47,42,.05) 0 3px,transparent 3px 6px);border-style:dashed}',
-      '.nt-foot{margin-top:12px;padding-top:10px;border-top:1.5px dashed rgba(51,47,42,.22);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#8A8275;letter-spacing:.3px}',
+      '.nt-foot{margin-top:12px;padding-top:10px;border-top:1.5px dashed rgba(51,47,42,.22);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#8A8275;letter-spacing:.3px;flex-wrap:wrap}',
+      '.nt-foot-actions{display:inline-flex;gap:6px;flex:0 0 auto}',
+      '.nt-display{margin-top:12px;padding-top:12px;border-top:1.5px dashed rgba(51,47,42,.22)}',
       '.nt-close{flex:0 0 auto;margin-left:8px;padding:0 4px;font-family:inherit;font-size:13px;line-height:1;color:#8A8275;background:none;border:0;cursor:pointer}',
       '.nt-close:hover{color:#332F2A}',
 
@@ -502,6 +728,115 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // ---------- display settings ----------
+    // 「显示方案 / 字段 / 密度 / 位置 / 隐藏」都在这一块里改，改完立即生效并落盘。
+    function Seg(props) {
+      var T = props.T
+      var options = props.options   // [[value, labelKey], ...]
+      var value = props.value
+      return h('div', { className: 'nt-seg', role: 'group', 'aria-label': props.label },
+        options.map(function (pair) {
+          var v = pair[0]
+          var on = v === value
+          return h('button', {
+            key: v,
+            type: 'button',
+            'aria-pressed': on,
+            onClick: function () { props.onChange(v) }
+          }, T(pair[1]))
+        })
+      )
+    }
+
+    function DisplaySettings(props) {
+      var T = props.T
+      var cfg = props.cfg
+      var onChange = props.onChange
+
+      var modes = [['mini', 'modeMini'], ['full', 'modeFull'], ['fun', 'modeFun']]
+      var modeHints = { mini: 'modeMiniHint', full: 'modeFullHint', fun: 'modeFunHint' }
+      var fields = [['amount', 'fieldAmount'], ['progress', 'fieldProgress'], ['month', 'fieldMonth'],
+        ['status', 'fieldStatus'], ['remain', 'fieldRemain'], ['rate', 'fieldRate']]
+
+      function toggleField(id) {
+        var patch = { fields: {} }
+        patch.fields[id] = !cfg.fields[id]
+        onChange(patch)
+      }
+
+      function fieldOn(id) { return cfg.fields[id] === true }
+
+      return h('div', { className: 'nt-display' },
+        h('span', { className: 'nt-dot-title', style: { margin: '0 0 6px' } }, T('mode')),
+        h('div', { className: 'nt-modes' },
+          modes.map(function (pair) {
+            var on = cfg.mode === pair[0]
+            return h('button', {
+              key: pair[0],
+              type: 'button',
+              'aria-pressed': on,
+              onClick: function () { onChange({ mode: pair[0] }) }
+            }, T(pair[1]))
+          })
+        ),
+        h('p', { className: 'nt-modehint' }, T(modeHints[cfg.mode] || 'modeFullHint')),
+
+        h('div', { className: 'nt-rowseg' },
+          h('label', null, T('densityLabel')),
+          h(Seg, {
+            T: T,
+            label: T('densityLabel'),
+            value: cfg.density,
+            options: [['compact', 'densityCompact'], ['cozy', 'densityCozy']],
+            onChange: function (v) { onChange({ density: v }) }
+          })
+        ),
+        h('div', { className: 'nt-rowseg' },
+          h('label', null, T('placeLabel')),
+          h(Seg, {
+            T: T,
+            label: T('placeLabel'),
+            value: cfg.place,
+            options: [['left', 'placeLeft'], ['center', 'placeCenter'], ['right', 'placeRight']],
+            onChange: function (v) { onChange({ place: v }) }
+          })
+        ),
+
+        h('span', { className: 'nt-dot-title', style: { margin: '10px 0 6px' } }, T('fieldsLabel')),
+        h('div', { className: 'nt-checks' },
+          fields.map(function (pair) {
+            var id = pair[0]
+            return h('label', { key: id, className: 'nt-check' },
+              h('input', {
+                type: 'checkbox',
+                checked: fieldOn(id),
+                onChange: function () { toggleField(id) }
+              }),
+              h('span', null, T(pair[1]))
+            )
+          })
+        ),
+
+        h('label', { className: 'nt-switch' },
+          h('input', {
+            type: 'checkbox',
+            checked: cfg.hideMoney === true,
+            onChange: function () { onChange({ hideMoney: !cfg.hideMoney }) }
+          }),
+          h('span', null, T('hideMoneyLabel'))
+        ),
+        h('label', { className: 'nt-switch' },
+          h('input', {
+            type: 'checkbox',
+            checked: false,
+            onChange: function () { onChange({ hidden: true }) }
+          }),
+          h('span', null, T('hideChipLabel'))
+        ),
+        h('p', { className: 'nt-hint', style: { margin: '-2px 0 0' } }, T('hideChipHint'))
+      )
+    }
+
     // ---------- floating panel plumbing ----------
     // 浮层的位置全部由「底部胶囊」的实时测量结果推导：
     //   --nt-left   卡片左边（等于胶囊左沿，clamp 进视口）
@@ -600,6 +935,9 @@ window.__ModuleLoader__.load({
       var formState = React.useState(false)
       var showForm = formState[0]
       var setShowForm = formState[1]
+      var displayState = React.useState(false)
+      var showDisplay = displayState[0]
+      var setShowDisplay = displayState[1]
       var tickState = React.useState(function () { return Date.now() })
       var tick = tickState[0]
       var setTick = tickState[1]
@@ -652,28 +990,103 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // 三种显示方案各自渲染，共用同一个 chip 外壳（点击/键盘/aria 一致）。
+      var pct = Math.round(clamp(r.progress, 0, 1) * 100)
+      var pctText = pct + '%'
+      var moneyHidden = cfg.hideMoney === true
+      var show = cfg.fields
+      var badgeClass = r.status === 'working' ? '' : (r.status === 'break' ? 'red' : 'grey')
+      var remainTxt = durTxt(r.remain, T)
+      var doneish = r.status === 'off' || r.status === 'overtime' || r.status === 'rest'
+
+      // 隐藏金额时，金额原本的位置交给进度百分比——「只显示工作进度」要真的看得见进度，
+      // 而不是留一块空白；aria-label 同样不该再把金额念出来。
+      var amountNode = show.amount && !moneyHidden
+        ? h('span', { key: 'amount', className: 'nt-money nt-chip-val' }, '¥' + money(r.todayEarn))
+        : null
+      var monthNode = show.month && !moneyHidden
+        ? h('span', { key: 'month', className: 'nt-chip-sub nt-money' }, T('chipMonth', { v: money(r.monthEarn) }))
+        : null
+      var progressNode = show.progress
+        ? h('span', { key: 'progress', className: 'nt-chip-sub' }, T('chipToday', { p: pct }))
+        : null
+      var primaryNode = amountNode || h('span', { key: 'lead', className: 'nt-chip-val nt-progress-lead' }, pctText)
+
+      var chipInner
+
+      if (cfg.mode === 'mini') {
+        // A · 极简：`● 今日已赚 ¥398.55 ▬▬▬ 70%`
+        chipInner = [
+          h('span', { key: 'main', className: 'nt-mini-main' },
+            h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
+            h('span', { className: 'nt-chip-sub' }, T('miniToday')),
+            amountNode
+          ),
+          h('span', { key: 'track', className: 'nt-mini-track' },
+            h('span', { className: 'nt-mini-fill', style: { width: pct + '%' } })),
+          h('span', { key: 'pct', className: 'nt-mini-pct' }, pctText),
+          h('span', { key: 'caret', className: 'nt-caret' }, open ? '▲' : '▼')
+        ]
+      } else if (cfg.mode === 'fun') {
+        // C · 趣味：主行标签 + 倒计时红章，金额放大，底部一句状态文案。
+        chipInner = [
+          h('span', { key: 'top', className: 'nt-fun-top' },
+            h('span', { className: 'nt-fun-label' }, '🐮 ', T('funLabel')),
+            h('span', { className: 'nt-fun-right' },
+              show.remain
+                ? h('span', { className: 'nt-fun-badge' + (doneish ? ' grey' : '') },
+                  r.status === 'overtime'
+                    ? T('remainBadgeOt', { t: durTxt(r.overtime, T) })
+                    : T(doneish ? 'remainBadgeDone' : 'remainBadge', { t: remainTxt }))
+                : null,
+              h('span', { className: 'nt-caret' }, open ? '▲' : '▼')
+            )
+          ),
+          primaryNode,
+          h('span', { key: 'caption', className: 'nt-fun-caption' }, doneish ? T('funFrozen') : T('funTicking')),
+        ]
+      } else {
+        // B · 完整：主行「牛马费 ¥398.55 · 状态章」，次行进度条 + 本月。
+        chipInner = [
+          h('span', { key: 'top', className: 'nt-full-top' },
+            h('span', { className: 'nt-full-left' },
+              h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
+              h('span', { className: 'nt-chip-sub' }, T('chipLabel')),
+              primaryNode
+            ),
+            h('span', { className: 'nt-full-right' },
+              show.status ? h('span', { className: 'nt-full-badge ' + badgeClass }, T(statusKey)) : null,
+              h('span', { className: 'nt-caret' }, open ? '▲' : '▼')
+            )
+          ),
+          h('span', { key: 'bar', className: 'nt-full-bar' },
+            h('span', { className: 'nt-full-track' },
+              h('span', { className: 'nt-full-fill', style: { width: pct + '%' } }))
+          ),
+          h('span', { key: 'notes', className: 'nt-full-notes' },
+            (moneyHidden && show.progress)
+              ? h('span', { className: 'nt-full-note' }, doneish ? T('finished') : T('remain', { t: clockTxt(r.remain) }))
+              : (progressNode
+                ? h('span', { className: 'nt-full-note' }, progressNode)
+                : h('span', { className: 'nt-full-note' }, pctText)),
+            monthNode
+          ),
+        ]
+      }
+
       var chip = h('div', {
-        className: 'nt-chip',
+        className: 'nt-chip nt-chip--' + cfg.mode,
         ref: chipRef,
         role: 'button',
         tabIndex: 0,
         'aria-expanded': open,
-        title: T('title'),
+        'aria-label': T('title') + ' ' + (moneyHidden ? pctText : ('¥' + money(r.todayEarn) + ' ' + pctText)),
+        'data-hide-money': moneyHidden ? 'true' : 'false',
+        'data-density': cfg.density,
+        title: T('title') + (moneyHidden ? ' · ' + T('moneyHidden') : ''),
         onClick: toggle,
         onKeyDown: onKeyDown
-      },
-        h('span', { className: 'nt-chip-main' },
-          h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
-          h('span', { className: 'nt-chip-sub' }, T('chipLabel')),
-          h('span', { className: 'nt-chip-val' }, '¥' + money(r.todayEarn))
-        ),
-        !open ? h('span', { className: 'nt-chip-line' },
-          h('span', { className: 'nt-chip-sub' }, T('chipToday', { p: (r.progress * 100).toFixed(0) })),
-          h('span', { className: 'nt-chip-sep' }, '·'),
-          h('span', { className: 'nt-chip-sub' }, T('chipMonth', { v: money(r.monthEarn) }))
-        ) : null,
-        h('span', { className: 'nt-caret' }, open ? '▲' : '▼')
-      )
+      }, chipInner)
 
       var body = !open ? null : h(FloatingPanel, { anchor: chipRef.current, onClose: close, label: T('title') },
         h('div', { className: 'nt-tape' }),
@@ -713,28 +1126,65 @@ window.__ModuleLoader__.load({
 
           h('div', { className: 'nt-foot' },
             h('span', null, T('monthTotal') + ' ¥' + money(r.monthEarn) + ' · ' + T('monthRatio', { p: (monthRatio * 100).toFixed(1) })),
-            h('button', {
-              className: 'nt-btn',
-              type: 'button',
-              onClick: function () { setShowForm(!showForm) }
-            }, showForm ? T('close') : T('edit'))
+            h('span', { className: 'nt-foot-actions' },
+              h('button', {
+                className: 'nt-btn' + (showDisplay && !showForm ? ' primary' : ''),
+                type: 'button',
+                onClick: function () {
+                  setShowForm(false)
+                  setShowDisplay(!(showDisplay && !showForm))
+                }
+              }, T('displayTitle')),
+              h('button', {
+                className: 'nt-btn' + (showForm ? ' primary' : ''),
+                type: 'button',
+                onClick: function () {
+                  setShowDisplay(false)
+                  setShowForm(!showForm)
+                }
+              }, showForm ? T('close') : T('edit'))
+            )
           ),
 
           showForm ? h(Settings, {
             cfg: cfg,
             T: T,
             onSave: function (next) {
-              var merged = {}
-              for (var k in cfg) { merged[k] = cfg[k] }
-              for (var key in next) { merged[key] = next[key] }
+              var merged = mergeCfg(cfg, next)
               setCfg(merged)
               writeCfg(merged)
+            }
+          }) : null,
+
+          (showDisplay && !showForm) ? h(DisplaySettings, {
+            cfg: cfg,
+            T: T,
+            onChange: function (patch) {
+              var merged = mergeCfg(cfg, patch)
+              setCfg(merged)
+              writeCfg(merged)
+              if (patch.hidden) { setOpen(false) }
             }
           }) : null
         )
       )
 
-      return h('div', { className: 'nt-wrap' }, chip, body)
+      // 一键隐藏：胶囊整体不渲染，只在右下角留一个极小圆点把它们叫回来。
+      if (cfg.hidden) {
+        return h('button', {
+          className: 'nt-dot-restore',
+          type: 'button',
+          title: T('showChip'),
+          'aria-label': T('showChip'),
+          onClick: function () {
+            var merged = mergeCfg(cfg, { hidden: false })
+            setCfg(merged)
+            writeCfg(merged)
+          }
+        }, '🐮')
+      }
+
+      return h('div', { className: 'nt-wrap', 'data-place': cfg.place }, chip, body)
     }
 
     // ---------- plugin ----------
