@@ -35,16 +35,6 @@ DeepSeek Harness（DSH）插件：在输入框下方挂一张手帐风格的小�
 
 状态章会自动切换：**打工中 / 午休中 / 已下班 / 无偿加班 / 未开工 / 休息日**；下班后仍在工位时，卡片显示「白干 X 小时 X 分」，金额封顶不再增长。
 
-## 截图
-
-| A · 极简 | B · 完整 | C · 趣味 |
-|---|---|---|
-| ![极简](assets/screenshots/mode-minimal.png) | ![完整](assets/screenshots/mode-full.png) | ![趣味](assets/screenshots/mode-playful.png) |
-
-| 隐藏金额 | 显示设置 |
-|---|---|
-| ![隐藏金额](assets/screenshots/hide-money.png) | ![显示设置](assets/screenshots/display-settings.png) |
-
 ## 计算口径
 
 ```
