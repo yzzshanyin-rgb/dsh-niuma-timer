@@ -482,6 +482,12 @@ window.__ModuleLoader__.load({
       /* 与原生统计胶囊同一行时（dock 的 gap 已给 12px），胶囊只按内容占宽，
          不抢 flex 增长份额，也不允许原生的 activity/usage 被它挤出可视区。 */
       '@media (max-width:640px){.nt-chip{font-size:12px;gap:7px;padding:3px 10px 4px}.nt-chip-val{font-size:13px}.nt-chip-sub{display:none}}',
+      /* 窄视口：胶囊必须能在 dock 里收缩。所有子项允许收缩 + 文本省略，
+         先丢最不关键的信息（本月 → 倒计时徽章 → 进度小段），保证永不溢出。 */
+      '.nt-chip{flex-wrap:nowrap}',
+      /* 兜底：任何模式下所有子项都不许把胶囊撑出容器 */
+      '.nt-chip>*{min-width:0}',
+      '.nt-money.nt-chip-sub{overflow:hidden;text-overflow:ellipsis}',
       '.nt-chip-val{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:#332F2A}',
       '.nt-chip-sep{color:#C9BFAA}',
       '.nt-chip-sub{color:#6D6558;white-space:nowrap}',
@@ -493,34 +499,29 @@ window.__ModuleLoader__.load({
          C 趣味：主行「🐮 今日打工收益 · 距解放倒计时」，金额换行放大，底部一句状态文案。
          三种都遵守同一个横向预算：flex:0 1 auto + min-width:0，不抢原生胶囊的位置。 */
       '.nt-chip--mini{gap:10px;padding:5px 14px 6px}',
-      '.nt-chip--mini .nt-mini-main{display:inline-flex;align-items:center;gap:7px;min-width:0}',
+      '.nt-chip--mini .nt-mini-main{display:inline-flex;align-items:center;gap:7px;min-width:0;flex:0 1 auto;overflow:hidden}',
       '.nt-chip--mini .nt-mini-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:-.2px}',
       '.nt-chip--mini .nt-mini-track{display:block;flex:0 0 auto;width:52px;height:5px;border-radius:3px;overflow:hidden;background:#D9D2BE}',
       '.nt-chip--mini .nt-mini-fill{display:block;height:100%;border-radius:3px;background:#7FA36B;transition:width .3s ease}',
       '.nt-chip--mini .nt-mini-pct{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;color:#6D6558;min-width:30px;text-align:right}',
 
-      '.nt-chip--full{position:relative;flex-direction:column;align-items:stretch;gap:3px;padding:6px 13px 7px;min-width:232px}',
-      '.nt-chip--full .nt-full-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}',
-      '.nt-chip--full .nt-full-left{display:inline-flex;align-items:baseline;gap:7px;min-width:0;overflow:hidden}',
-      '.nt-chip--full .nt-full-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}',
-      '.nt-chip--full .nt-full-right{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}',
+      /* 完整：单行横排 —— 状态点 + 标签 + 金额 + 状态章 + 小进度条 + 百分比 + 本月 + 角标 */
+      '.nt-chip--full{gap:8px;padding:5px 13px 6px}',
+      '.nt-chip--full .nt-full-main{display:inline-flex;align-items:baseline;gap:7px;min-width:0;flex:0 1 auto;overflow:hidden}',
       '.nt-chip--full .nt-full-badge{flex:0 0 auto;padding:1px 8px;font-size:10.5px;letter-spacing:.6px;border-radius:999px;background:rgba(127,163,107,.18);color:#4F6B3E;border:1px solid rgba(127,163,107,.4);white-space:nowrap}',
       '.nt-chip--full .nt-full-badge.grey{background:rgba(138,130,117,.14);color:#6D6558;border-color:rgba(138,130,117,.34)}',
       '.nt-chip--full .nt-full-badge.red{background:rgba(210,96,90,.14);color:#9C3F3A;border-color:rgba(210,96,90,.36)}',
-      '.nt-chip--full .nt-full-bar{display:flex;align-items:center;gap:8px;min-width:0;width:100%}',
-      '.nt-chip--full .nt-full-notes{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;width:100%}',
-      '.nt-chip--full .nt-full-track{display:block;flex:1 1 auto;min-width:56px;height:5px;border-radius:3px;overflow:hidden;background:#D9D2BE}',
+      '.nt-chip--full .nt-full-prog{display:inline-flex;align-items:center;gap:5px;flex:0 1 auto;min-width:0}',
+      '.nt-chip--full .nt-full-track{display:block;flex:0 0 auto;width:44px;height:5px;border-radius:3px;overflow:hidden;background:#D9D2BE}',
       '.nt-chip--full .nt-full-fill{display:block;height:100%;border-radius:3px;background-color:#7FA36B;background-image:repeating-linear-gradient(45deg,#7FA36B 0 4px,#96B884 4px 8px);transition:width .3s ease}',
       '.nt-chip--full .nt-full-note{flex:0 0 auto;font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;font-variant-numeric:tabular-nums;color:#6D6558;white-space:nowrap}',
 
-      '.nt-chip--fun{position:relative;flex-direction:column;align-items:stretch;gap:2px;padding:7px 14px 8px;background-color:#FBF3E0;background-image:none}',
-      '.nt-chip--fun .nt-fun-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}',
-      '.nt-chip--fun .nt-fun-label{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#6D6558;letter-spacing:.6px;white-space:nowrap}',
-      '.nt-chip--fun .nt-fun-right{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}',
-      '.nt-chip--fun .nt-fun-badge{flex:0 0 auto;padding:1px 9px;font-size:10.5px;letter-spacing:.4px;border-radius:999px;background:rgba(210,96,90,.15);color:#9C3F3A;border:1px solid rgba(210,96,90,.32);white-space:nowrap}',
+      /* 趣味：单行横排 —— 🐮 标签 + 金额（加重）+ 倒计时红章 + 角标 */
+      '.nt-chip--fun{gap:9px;padding:5px 14px 6px;background-color:#FBF3E0;background-image:none}',
+      '.nt-chip--fun .nt-fun-label{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:#6D6558;letter-spacing:.5px;white-space:nowrap;flex:0 0 auto}',
+      '.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:16px;font-weight:800}',
+      '.nt-chip--fun .nt-fun-badge{flex:0 1 auto;min-width:0;padding:1px 9px;font-size:10.5px;letter-spacing:.4px;border-radius:999px;background:rgba(210,96,90,.15);color:#9C3F3A;border:1px solid rgba(210,96,90,.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '.nt-chip--fun .nt-fun-badge.grey{background:rgba(138,130,117,.13);color:#6D6558;border-color:rgba(138,130,117,.3)}',
-      '.nt-chip--fun .nt-fun-amount{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:800;font-size:19px;line-height:1.25;font-variant-numeric:tabular-nums;letter-spacing:-.4px}',
-      '.nt-chip--fun .nt-fun-caption{font-size:10.5px;color:#8A8275;letter-spacing:.3px}',
 
       /* 隐藏金额时（hideMoney）：所有金额节点整体收起，进度/时间接管主位 */
       '.nt-chip[data-hide-money="true"] .nt-money{display:none}',
@@ -531,7 +532,7 @@ window.__ModuleLoader__.load({
       /* 极窄视口（分栏/手机竖屏）不能让固定最小宽度撑破 dock */
       '@media (max-width:380px){.nt-chip--full{min-width:0}}',
       '.nt-chip[data-density="compact"] .nt-chip-val,.nt-chip[data-density="compact"] .nt-mini-amount{font-size:12.5px}',
-      '.nt-chip[data-density="compact"] .nt-chip-line,.nt-chip[data-density="compact"] .nt-fun-caption,.nt-chip[data-density="compact"] .nt-full-bar{display:none}',
+      '.nt-chip[data-density="compact"] .nt-chip-line{display:none}',
 
       /* 位置：只改 nt-wrap 在 dock 里的 align-self，不动宿主容器 */
       '.nt-wrap[data-place="left"]{align-self:flex-start}',
@@ -633,7 +634,16 @@ window.__ModuleLoader__.load({
       '@media (prefers-color-scheme: dark){.nt-chip{box-shadow:2px 2px 0 rgba(0,0,0,.4)}}',
       /* 窄屏：浮层铺满可用宽度，跟着视口走，不再对齐胶囊 */
       '@media (max-width:620px){.nt-panel{left:12px;right:12px;width:auto;max-width:none}.nt-layer{padding:12px}.nt-pointer{display:none}}',
-      '@media (max-width:520px){.nt-panel{padding:13px 12px 11px}.nt-amount .val{font-size:28px}.nt-row2{grid-template-columns:1fr 1fr}}'
+      '@media (max-width:520px){.nt-panel{padding:13px 12px 11px}.nt-amount .val{font-size:28px}.nt-row2{grid-template-columns:1fr 1fr}}',
+      /* 窄屏只在真的放不下时才降级，按重要性从低到高丢：
+         ① ≤560px 收紧间距与进度条宽度；② ≤430px 收起本月累计；
+         ③ ≤340px 收起完整模式的进度小段；④ ≤260px 只剩金额与标签。 */
+      '@media (max-width:560px){.nt-chip{gap:6px}.nt-chip--full,.nt-chip--fun,.nt-chip--mini{min-width:0;max-width:100%}.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:14px}.nt-chip--full .nt-full-note{display:none}.nt-chip--full .nt-full-track{width:32px}}',
+      '@media (max-width:430px){.nt-money.nt-chip-sub{display:none}}',
+      '@media (max-width:340px){.nt-chip--full .nt-full-prog{display:none}.nt-chip--fun .nt-fun-badge{font-size:10px;padding:0 6px;max-width:9em;overflow:hidden;text-overflow:ellipsis}}',
+      /* 趣味模式的倒计时徽章文字最长，窄屏让它先缩，不要把整条胶囊撑爆 */
+      '@media (max-width:420px){.nt-chip--fun .nt-fun-badge{max-width:7.5em;overflow:hidden;text-overflow:ellipsis;min-width:0}.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:13px}}',
+      '@media (max-width:260px){.nt-chip--full .nt-full-badge{display:none}.nt-chip--fun .nt-fun-badge{display:none}.nt-chip--mini .nt-mini-track{display:none}}'
     ].join('\n')
     // ---------- components ----------
     function Day(props) {
@@ -1028,49 +1038,43 @@ window.__ModuleLoader__.load({
           h('span', { key: 'caret', className: 'nt-caret' }, open ? '▲' : '▼')
         ]
       } else if (cfg.mode === 'fun') {
-        // C · 趣味：主行标签 + 倒计时红章，金额放大，底部一句状态文案。
+        // C · 趣味（单行）：`🐮 今日打工收益 ¥398.55 [距离解放还有 2 小时] ▼`
         chipInner = [
-          h('span', { key: 'top', className: 'nt-fun-top' },
-            h('span', { className: 'nt-fun-label' }, '🐮 ', T('funLabel')),
-            h('span', { className: 'nt-fun-right' },
-              show.remain
-                ? h('span', { className: 'nt-fun-badge' + (doneish ? ' grey' : '') },
-                  r.status === 'overtime'
-                    ? T('remainBadgeOt', { t: durTxt(r.overtime, T) })
-                    : T(doneish ? 'remainBadgeDone' : 'remainBadge', { t: remainTxt }))
-                : null,
-              h('span', { className: 'nt-caret' }, open ? '▲' : '▼')
-            )
-          ),
+          h('span', { key: 'label', className: 'nt-fun-label' }, '🐮 ', T('funLabel')),
           primaryNode,
-          h('span', { key: 'caption', className: 'nt-fun-caption' }, doneish ? T('funFrozen') : T('funTicking')),
+          show.remain
+            ? h('span', {
+              key: 'badge',
+              className: 'nt-fun-badge' + (doneish ? ' grey' : ''),
+              // 悬停/读屏保留原来那两句状态文案
+              title: doneish ? T('funFrozen') : T('funTicking')
+            },
+            r.status === 'overtime'
+              ? T('remainBadgeOt', { t: durTxt(r.overtime, T) })
+              : T(doneish ? 'remainBadgeDone' : 'remainBadge', { t: remainTxt }))
+            : null,
+          h('span', { key: 'caret', className: 'nt-caret' }, open ? '▲' : '▼')
         ]
       } else {
-        // B · 完整：主行「牛马费 ¥398.55 · 状态章」，次行进度条 + 本月。
+        // B · 完整（单行）：`● 牛马费 ¥398.55 [打工中] ▬▬ 82% · 本月 ¥6,174 ▼`
+        // 进度用一小段进度条 + 百分比表达，不再单独占一行。
         chipInner = [
-          h('span', { key: 'top', className: 'nt-full-top' },
-            h('span', { className: 'nt-full-left' },
-              h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
-              h('span', { className: 'nt-chip-sub' }, T('chipLabel')),
-              primaryNode
-            ),
-            h('span', { className: 'nt-full-right' },
-              show.status ? h('span', { className: 'nt-full-badge ' + badgeClass }, T(statusKey)) : null,
-              h('span', { className: 'nt-caret' }, open ? '▲' : '▼')
-            )
+          h('span', { key: 'main', className: 'nt-full-main' },
+            h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
+            h('span', { className: 'nt-chip-sub' }, T('chipLabel')),
+            primaryNode
           ),
-          h('span', { key: 'bar', className: 'nt-full-bar' },
-            h('span', { className: 'nt-full-track' },
-              h('span', { className: 'nt-full-fill', style: { width: pct + '%' } }))
-          ),
-          h('span', { key: 'notes', className: 'nt-full-notes' },
-            (moneyHidden && show.progress)
-              ? h('span', { className: 'nt-full-note' }, doneish ? T('finished') : T('remain', { t: clockTxt(r.remain) }))
-              : (progressNode
-                ? h('span', { className: 'nt-full-note' }, progressNode)
-                : h('span', { className: 'nt-full-note' }, pctText)),
-            monthNode
-          ),
+          show.status
+            ? h('span', { key: 'badge', className: 'nt-full-badge ' + badgeClass }, T(statusKey))
+            : null,
+          (show.progress && !moneyHidden && amountNode)
+            ? h('span', { key: 'prog', className: 'nt-full-prog' },
+              h('span', { className: 'nt-full-track' },
+                h('span', { className: 'nt-full-fill', style: { width: pct + '%' } })),
+              h('span', { className: 'nt-full-note' }, pctText))
+            : null,
+          monthNode,
+          h('span', { key: 'caret', className: 'nt-caret' }, open ? '▲' : '▼')
         ]
       }
 
