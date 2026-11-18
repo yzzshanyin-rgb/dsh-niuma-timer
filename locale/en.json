@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Niuma Work-Yield Timer",
-    "description": "A hand-drawn journal card under the composer: enter your monthly pay and working hours to watch today's earnings tick up. The collapsed chip is a configurable mini dashboard with three layouts (minimal, full, playful), per-field toggles, a hide-amounts mode, position and density settings, and one-click hide."
+    "description": "A hand-drawn journal card under the composer: enter your monthly pay and working hours to watch today's earnings tick up. The collapsed chip is a configurable mini dashboard with three single-row layouts, per-field toggles, hide-amounts mode, position and density settings, and one-click hide. The panel adds a read-only timeline of today's hours plus an opt-in end-of-day guard (warn before, warn at, overtime status) that is off by default."
   }
 }

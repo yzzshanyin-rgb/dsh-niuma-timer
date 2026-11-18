@@ -46,6 +46,13 @@ window.__ModuleLoader__.load({
         status: true,
         remain: true,
         rate: false
+      },
+      // ---- 下班保护（默认全关，三项独立） ----
+      notify: {
+        preEnd: false,     // 计划下班前提醒一次
+        lead: 10,          // 提前几分钟：5 | 10 | 15 | 30
+        atEnd: false,      // 到点提醒一次
+        overtime: false    // 面板/胶囊里显示「已超过计划下班时间 N 分钟」
       }
     }
 
@@ -54,16 +61,18 @@ window.__ModuleLoader__.load({
     var FIELD_IDS = ['amount', 'progress', 'month', 'status', 'remain', 'rate']
     var PLACES = ['left', 'center', 'right']
     var DENSITIES = ['compact', 'cozy']
+    var LEADS = [5, 10, 15, 30]
 
-    /** 合并保存的配置：深拷贝 DEFAULTS（fields 是嵌套对象，不能共享引用）。 */
+    /** 合并保存的配置：深拷贝 DEFAULTS（fields / notify 是嵌套对象，不能共享引用）。 */
     function cloneDefaults() {
       var out = {}
       for (var k in DEFAULTS) {
-        if (k === 'fields') {
-          out.fields = {}
-          for (var f in DEFAULTS.fields) { out.fields[f] = DEFAULTS.fields[f] }
+        var v = DEFAULTS[k]
+        if (v && typeof v === 'object') {
+          out[k] = {}
+          for (var f in v) { out[k][f] = v[f] }
         } else {
-          out[k] = DEFAULTS[k]
+          out[k] = v
         }
       }
       return out
@@ -115,6 +124,7 @@ window.__ModuleLoader__.load({
         save: '存下来',
         saved: '存好了',
         errSalary: '月薪得大于 0',
+        errTime: '上下班时间要填完整（例如 09:00）',
         errOrder: '下班时间要晚于上班时间',
         errBreak: '午休开始要在上下班之间',
         errNet: '扣掉午休后没有工作时间了',
@@ -159,7 +169,37 @@ window.__ModuleLoader__.load({
         hideChipHint: '隐藏后右下角会出现一个小圆点，点它回来',
         showChip: '显示牛马费胶囊',
         displayTitle: '显示设置',
-        moneyHidden: '金额已隐藏'
+        moneyHidden: '金额已隐藏',
+
+        // ---- 今日时间轴（只读） ----
+        tlTitle: '今日时间轴',
+        tlStart: '上班',
+        tlEnd: '下班',
+        tlBreak: '午休',
+        tlBefore: '尚未上班',
+        tlAfter: '已到计划下班时间',
+        tlNoSchedule: '时间还没配全',
+        tlNeedTimes: '在「改数据」里填上上下班时间，这里才会画出今天的时间轴。',
+        tlProgress: '已工作 {a} / 计划 {b}',
+
+        // ---- 下班保护 ----
+        notifyTitle: '下班保护',
+        notifyLead: '只提醒工作边界，不是考勤',
+        preEndLabel: '下班前提醒',
+        leadLabel: '提前',
+        lead5: '5 分',
+        lead10: '10 分',
+        lead15: '15 分',
+        lead30: '30 分',
+        atEndLabel: '到点提醒',
+        overtimeLabel: '下班后超时状态',
+        overtimeHint: '在面板里显示「已超过计划下班时间 X 分钟」，随时间更新，不弹窗',
+        notifyNote: '三项默认关闭、可单独开关；同一提醒每天最多一次。不记录你的实际下班时间，也不算加班收入。',
+        otJustNow: '已超过计划下班时间不到 1 分钟',
+        otOvertime: '已超过计划下班时间 {n} 分钟',
+        otBadge: '超时 {n} 分',
+        remPreEnd: '还有 {t} 就到计划下班时间',
+        remAtEnd: '到计划下班时间了（{t}）'
       },
       en: {
         chipLabel: 'Work-yield',
@@ -203,6 +243,7 @@ window.__ModuleLoader__.load({
         save: 'Save',
         saved: 'Saved',
         errSalary: 'Monthly pay must be above 0',
+        errTime: 'Fill in both start and end times (for example 09:00)',
         errOrder: 'End time must be after start time',
         errBreak: 'Break must start between start and end',
         errNet: 'No working time left after the break',
@@ -247,7 +288,37 @@ window.__ModuleLoader__.load({
         hideChipHint: 'A small dot stays in the bottom-right corner — click it to bring the chip back',
         showChip: 'Show the work-yield chip',
         displayTitle: 'Display',
-        moneyHidden: 'Amounts hidden'
+        moneyHidden: 'Amounts hidden',
+
+        // ---- today's timeline (read-only) ----
+        tlTitle: "Today's hours",
+        tlStart: 'Start',
+        tlEnd: 'End',
+        tlBreak: 'Break',
+        tlBefore: 'Not started yet',
+        tlAfter: 'Past the planned end time',
+        tlNoSchedule: 'Times incomplete',
+        tlNeedTimes: "Fill in your start and end times under Edit to draw today's timeline.",
+        tlProgress: '{a} worked / {b} planned',
+
+        // ---- end-of-day guard ----
+        notifyTitle: 'End of day',
+        notifyLead: 'Boundary reminders only — not time tracking',
+        preEndLabel: 'Warn before the end time',
+        leadLabel: 'Lead',
+        lead5: '5m',
+        lead10: '10m',
+        lead15: '15m',
+        lead30: '30m',
+        atEndLabel: 'Remind at the end time',
+        overtimeLabel: 'Show overtime status',
+        overtimeHint: 'Shows how long you are past the planned end time in the panel; updates live, no popups',
+        notifyNote: 'All three are off by default and toggle independently; each reminder fires at most once a day. Your actual clock-out time is never recorded, and overtime never counts as earnings.',
+        otJustNow: 'Past the planned end time by less than a minute',
+        otOvertime: 'Past the planned end time by {n} min',
+        otBadge: '{n}m over',
+        remPreEnd: '{t} until your planned end time',
+        remAtEnd: 'Planned end time reached ({t})'
       }
     }
 
@@ -284,13 +355,19 @@ window.__ModuleLoader__.load({
         if (raw) {
           var saved = JSON.parse(raw)
           for (var key in out) {
-            if (key === 'fields') { continue }
+            if (out[key] && typeof out[key] === 'object') { continue }
             if (saved[key] !== undefined && saved[key] !== null && saved[key] !== '') { out[key] = saved[key] }
           }
           if (saved.fields && typeof saved.fields === 'object') {
             for (var f in out.fields) {
               if (typeof saved.fields[f] === 'boolean') { out.fields[f] = saved.fields[f] }
             }
+          }
+          if (saved.notify && typeof saved.notify === 'object') {
+            out.notify.preEnd = saved.notify.preEnd === true
+            out.notify.atEnd = saved.notify.atEnd === true
+            out.notify.overtime = saved.notify.overtime === true
+            out.notify.lead = oneOf(Number(saved.notify.lead), LEADS, 10)
           }
         }
       } catch (e) { /* keep defaults */ }
@@ -307,26 +384,67 @@ window.__ModuleLoader__.load({
       try { localStorage.setItem(STORE_KEY, JSON.stringify(cfg)) } catch (e) { /* ignore */ }
     }
 
-    /** 合并更新：浅合并顶层，fields 深合并，避免调用方漏字段时丢设置。 */
+    // 提醒的「今天已经响过」账本：与配置分开存，按自然日滚动。
+    // 只记 preEnd / atEnd 两类弹窗，超时状态是持续显示、不需要去重。
+    var FIRE_KEY = 'dsh-niuma-timer.fired.v1'
+
+    function dayKey(d) {
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+    }
+
+    function readFired() {
+      var empty = { day: '', preEnd: false, atEnd: false }
+      try {
+        var raw = localStorage.getItem(FIRE_KEY)
+        if (!raw) { return empty }
+        var saved = JSON.parse(raw)
+        return {
+          day: typeof saved.day === 'string' ? saved.day : '',
+          preEnd: saved.preEnd === true,
+          atEnd: saved.atEnd === true
+        }
+      } catch (e) { return empty }
+    }
+
+    function writeFired(v) {
+      try { localStorage.setItem(FIRE_KEY, JSON.stringify(v)) } catch (e) { /* ignore */ }
+    }
+
+    /** 合并更新：浅合并顶层，嵌套对象逐键合并，避免调用方漏字段时丢设置。 */
     function mergeCfg(base, patch) {
       var next = {}
-      for (var k in base) {
-        next[k] = (k === 'fields') ? null : base[k]
+      var k, f
+      for (k in base) {
+        var bv = base[k]
+        if (bv && typeof bv === 'object') {
+          next[k] = {}
+          for (f in bv) { next[k][f] = bv[f] }
+        } else {
+          next[k] = bv
+        }
       }
-      next.fields = {}
-      for (var f in base.fields) { next.fields[f] = base.fields[f] }
       for (var key in patch) {
-        if (key === 'fields' && patch.fields && typeof patch.fields === 'object') {
-          for (var fid in patch.fields) {
-            if (fid in next.fields) { next.fields[fid] = !!patch.fields[fid] }
+        if (!(key in next)) { continue }
+        var pv = patch[key]
+        if (pv && typeof pv === 'object' && next[key] && typeof next[key] === 'object') {
+          for (var nk in pv) {
+            if (!(nk in next[key])) { continue }
+            var cur = next[key][nk]
+            if (typeof cur === 'boolean') { next[key][nk] = pv[nk] === true }
+            else if (typeof cur === 'number') { next[key][nk] = Number(pv[nk]) || 0 }
+            else { next[key][nk] = pv[nk] }
           }
-        } else if (key in next) {
-          next[key] = patch[key]
+        } else {
+          next[key] = pv
         }
       }
       next.mode = oneOf(next.mode, MODES, 'full')
       next.place = oneOf(next.place, PLACES, 'center')
       next.density = oneOf(next.density, DENSITIES, 'cozy')
+      next.notify.lead = oneOf(Number(next.notify.lead), LEADS, 10)
+      next.notify.preEnd = next.notify.preEnd === true
+      next.notify.atEnd = next.notify.atEnd === true
+      next.notify.overtime = next.notify.overtime === true
       return next
     }
 
@@ -388,6 +506,80 @@ window.__ModuleLoader__.load({
       return count
     }
 
+    // ---------- 今日时间轴（只读） ----------
+    // 所有节点都从现有设置推导：没有午休配置就不画午休区间；上下班缺一个就没有
+    // 可用量程——此时不画刻度、不给百分比、不给倒计时，只把已知节点列出来。
+    function validTime(v) {
+      return typeof v === 'string' && /^\d{1,2}:\d{2}$/.test(v.trim())
+    }
+
+    function hmTxt(sec) {
+      var d = splitDur(sec)
+      return pad2(d.h) + ':' + pad2(d.m)
+    }
+
+    function timelineOf(cfg, now) {
+      var hasStart = validTime(cfg.start)
+      var hasEnd = validTime(cfg.end)
+      var startSec = hasStart ? toSec(cfg.start) : null
+      var endSec = hasEnd ? toSec(cfg.end) : null
+      var ordered = hasStart && hasEnd && endSec > startSec
+
+      var bmSec = Math.max(0, Number(cfg.breakMin) || 0) * 60
+      var hasBreak = false
+      var bsSec = null
+      var beSec = null
+      if (ordered && validTime(cfg.breakStart) && bmSec > 0) {
+        var b = toSec(cfg.breakStart)
+        if (b >= startSec && b < endSec) {
+          hasBreak = true
+          bsSec = b
+          beSec = Math.min(b + bmSec, endSec)
+        }
+      }
+
+      var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+      var nowPct = null
+      var phase = 'unknown'
+      if (ordered) {
+        nowPct = clamp((nowSec - startSec) / (endSec - startSec), 0, 1)
+        phase = nowSec < startSec ? 'before' : (nowSec >= endSec ? 'after' : 'during')
+      }
+
+      // 进度只在排班完整、且扣掉午休后仍有计划工时的情况下才算；
+      // 午休不计入计划工作时长。
+      var planned = null
+      var worked = null
+      var ratio = null
+      if (ordered) {
+        var p = (endSec - startSec) - (hasBreak ? (beSec - bsSec) : 0)
+        if (p > 0) {
+          var t = Math.min(Math.max(nowSec, startSec), endSec)
+          var w = t - startSec
+          if (hasBreak) { w -= Math.max(0, Math.min(t, beSec) - bsSec) }
+          planned = p
+          worked = Math.max(0, Math.min(w, p))
+          ratio = worked / p
+        }
+      }
+
+      return {
+        hasStart: hasStart,
+        hasEnd: hasEnd,
+        ordered: ordered,
+        startSec: startSec,
+        endSec: endSec,
+        hasBreak: hasBreak,
+        bsSec: bsSec,
+        beSec: beSec,
+        nowPct: nowPct,
+        phase: phase,
+        planned: planned,
+        worked: worked,
+        ratio: ratio
+      }
+    }
+
     // ---------- core ----------
     function compute(cfg, now) {
       var startSec = toSec(cfg.start)
@@ -406,6 +598,31 @@ window.__ModuleLoader__.load({
 
       var salary = Math.max(0, Number(cfg.salary) || 0)
       var dayPay = totalWorkdays > 0 ? salary / totalWorkdays : 0
+      var doneDays0 = workdaysBeforeToday(now)
+
+      // 排班不完整（时间缺失或写坏）：不猜时间，也不猜今天的收入。
+      // 今日按 0 计，月收入仍只累计已经走完的工作日 —— 不虚构、不出现负时长。
+      if (!validTime(cfg.start) || !validTime(cfg.end)) {
+        return {
+          status: 'rest',
+          incomplete: true,
+          dayPay: 0,
+          hourPay: 0,
+          secPay: 0,
+          todayEarn: 0,
+          worked: 0,
+          remain: 0,
+          overtime: 0,
+          progress: 0,
+          totalWorkdays: totalWorkdays,
+          autoWorkdays: autoWorkdays(now),
+          doneDays: doneDays0,
+          monthEarn: Math.min(salary, dayPay * doneDays0),
+          salary: salary,
+          netSec: 1
+        }
+      }
+
       var secPay = dayPay / netSec
 
       var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000
@@ -613,6 +830,46 @@ window.__ModuleLoader__.load({
       '.nt-close{flex:0 0 auto;margin-left:8px;padding:0 4px;font-family:inherit;font-size:13px;line-height:1;color:#8A8275;background:none;border:0;cursor:pointer}',
       '.nt-close:hover{color:#332F2A}',
 
+      /* ---------- 今日时间轴（只读） ----------
+         一条带刻度感的横条：实心斜纹＝工作区间，淡蓝斜纹＝午休区间，
+         红针＝当前时间。节点标签只放决定阅读的三处（上班 / 午休 / 下班），
+         窄屏先压掉「上班·下班」这类说明字，时间数字永远保留。 */
+      '.nt-tl{margin-top:12px;padding-top:11px;border-top:1.5px dashed rgba(51,47,42,.22)}',
+      '.nt-tl-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}',
+      '.nt-tl-title{flex:0 0 auto;font-size:11px;color:#8A8275;letter-spacing:1.6px}',
+      '.nt-tl-state{flex:0 1 auto;min-width:0;font-size:11px;color:#6D6558;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nt-tl-track{position:relative;height:12px;border:1.6px solid rgba(51,47,42,.6);border-radius:7px 9px 7px 10px/9px 7px 10px 7px;background:#FFFDF6;overflow:hidden}',
+      '.nt-tl-seg{position:absolute;top:0;bottom:0}',
+      '.nt-tl-seg.work{background-color:#7FA36B;background-image:repeating-linear-gradient(45deg,#7FA36B 0 5px,#96B884 5px 10px)}',
+      '.nt-tl-seg.rest{background-color:rgba(76,123,140,.26);background-image:repeating-linear-gradient(45deg,rgba(76,123,140,.36) 0 4px,rgba(76,123,140,.14) 4px 8px)}',
+      '.nt-tl-now{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#D2605A;border-radius:1px;box-shadow:0 0 0 1.5px rgba(210,96,90,.2)}',
+      '.nt-tl-labels{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:5px}',
+      '.nt-tl-lbl{display:flex;flex-direction:column;min-width:0;font-size:10.5px;color:#8A8275}',
+      '.nt-tl-lbl b{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11.5px;font-weight:700;color:#4A443B;letter-spacing:0}',
+      '.nt-tl-lbl i{font-style:normal;font-size:10px;color:#9A9285;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nt-tl-lbl.mid{align-items:center;text-align:center}',
+      '.nt-tl-lbl.end{align-items:flex-end;text-align:right}',
+      '.nt-tl-prog{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:6px;font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:#6D6558}',
+      '.nt-tl-prog>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nt-tl-pct{flex:0 0 auto;font-weight:700;color:#4A443B}',
+      '.nt-tl-known{display:flex;flex-wrap:wrap;gap:12px;font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:11.5px;color:#4A443B}',
+
+      /* 超时状态：持续显示，不弹窗 —— 只说「现在比计划下班时间晚了多久」 */
+      '.nt-ot{display:flex;align-items:center;gap:6px;margin-top:10px;padding:5px 9px;font-size:11.5px;line-height:1.45;color:#9C3F3A;background:rgba(210,96,90,.1);border:1.3px dashed rgba(210,96,90,.45);border-radius:9px 11px 9px 12px/11px 9px 12px 9px}',
+      '.nt-ot b{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700}',
+
+      /* 下班保护设置区 */
+      '.nt-note{margin:2px 0 8px;font-size:10.5px;line-height:1.55;color:#9A9285}',
+
+      /* 提醒条：浮在胶囊上方，自带关闭按钮；三层 z-index 低于宿主自己的 dialog */
+      '.nt-reminder{position:fixed;right:16px;bottom:92px;z-index:32;display:flex;align-items:center;gap:8px;max-width:320px;padding:7px 9px 8px 11px;font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif;font-size:12.5px;line-height:1.45;color:#332F2A;background-color:rgba(255,253,246,.96);background-image:repeating-linear-gradient(to bottom,transparent 0 14px,rgba(120,170,195,.16) 14px 15px);border:1.6px solid #332F2A;border-radius:12px 15px 11px 16px/14px 11px 16px 12px;box-shadow:3px 4px 0 rgba(51,47,42,.14),0 14px 30px -14px rgba(60,45,20,.4);animation:nt-rem .18s ease-out}',
+      '@keyframes nt-rem{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+      '.nt-reminder-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#D2605A}',
+      '.nt-reminder-text{flex:1 1 auto;min-width:0}',
+      '.nt-reminder-x{flex:0 0 auto;padding:0 3px;font-family:inherit;font-size:15px;line-height:1;color:#8A8275;background:none;border:0;cursor:pointer}',
+      '.nt-reminder-x:hover{color:#332F2A}',
+      '.nt-reminder-x:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2563eb);outline-offset:1px}',
+
       /* buttons */
       '.nt-btn{font-family:inherit;font-size:12.5px;letter-spacing:1.2px;padding:3px 13px;cursor:pointer;color:#332F2A;background:rgba(255,253,246,.7);border:1.6px solid #332F2A;border-radius:10px 13px 9px 14px/13px 9px 14px 10px;box-shadow:2px 2px 0 rgba(51,47,42,.14);transition:transform .12s ease,box-shadow .12s ease;white-space:nowrap}',
       '.nt-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(51,47,42,.16)}',
@@ -643,7 +900,15 @@ window.__ModuleLoader__.load({
       '@media (max-width:340px){.nt-chip--full .nt-full-prog{display:none}.nt-chip--fun .nt-fun-badge{font-size:10px;padding:0 6px;max-width:9em;overflow:hidden;text-overflow:ellipsis}}',
       /* 趣味模式的倒计时徽章文字最长，窄屏让它先缩，不要把整条胶囊撑爆 */
       '@media (max-width:420px){.nt-chip--fun .nt-fun-badge{max-width:7.5em;overflow:hidden;text-overflow:ellipsis;min-width:0}.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:13px}}',
-      '@media (max-width:260px){.nt-chip--full .nt-full-badge{display:none}.nt-chip--fun .nt-fun-badge{display:none}.nt-chip--mini .nt-mini-track{display:none}}'
+      '@media (max-width:260px){.nt-chip--full .nt-full-badge{display:none}.nt-chip--fun .nt-fun-badge{display:none}.nt-chip--mini .nt-mini-track{display:none}}',
+
+      /* 时间轴与提醒条的窄屏降级（必须排在所有基础规则之后，否则会被覆盖）：
+         ≤520px 提醒条铺满宽度；≤440px 先压掉「上班 / 午休 / 下班」这类说明字，
+         节点时间与当前状态仍然保留 —— 这两样是可辨识性的下限，不参与降级。 */
+      '@media (max-width:520px){.nt-reminder{left:12px;right:12px;max-width:none}}',
+      '@media (max-width:440px){.nt-tl-lbl i{display:none}.nt-tl-lbl b{font-size:11px}.nt-tl-prog{font-size:10.5px}}',
+      '@media (max-width:300px){.nt-tl-prog>span:first-child{white-space:normal}.nt-tl-known{gap:8px}}',
+      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}}'
     ].join('\n')
     // ---------- components ----------
     function Day(props) {
@@ -687,6 +952,7 @@ window.__ModuleLoader__.load({
         var salary = Number(draft.salary)
         var workdays = Number(draft.workdays)
         if (!(salary > 0)) { setErr(T('errSalary')); return }
+        if (!validTime(draft.start) || !validTime(draft.end)) { setErr(T('errTime')); return }
         if (toSec(draft.end) <= toSec(draft.start)) { setErr(T('errOrder')); return }
         if (toSec(draft.breakStart) < toSec(draft.start) || toSec(draft.breakStart) > toSec(draft.end)) {
           setErr(T('errBreak')); return
@@ -847,6 +1113,175 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // ---------- 今日时间轴（只读视图，没有任何可点元素） ----------
+    function Timeline(props) {
+      var T = props.T
+      var cfg = props.cfg
+      var tl = props.tl
+
+      var stateTxt = ''
+      if (tl.ordered) {
+        if (props.rest) { stateTxt = T('stRest') }
+        else if (tl.phase === 'before') { stateTxt = T('tlBefore') }
+        else if (tl.phase === 'after') { stateTxt = T('tlAfter') }
+        else if (props.status === 'break') { stateTxt = T('stBreak') }
+        else { stateTxt = T('stWorking') }
+      }
+
+      var head = h('div', { className: 'nt-tl-head' },
+        h('span', { className: 'nt-tl-title' }, T('tlTitle')),
+        h('span', { className: 'nt-tl-state' }, tl.ordered ? stateTxt : T('tlNoSchedule'))
+      )
+
+      // 时间配不全：只列已知节点。没有量程就不画刻度、不算百分比——
+      // 假的 0% / 负时长 / 错倒计时比空白更糟。
+      if (!tl.ordered) {
+        var known = []
+        if (tl.hasStart) { known.push(h('span', { key: 's' }, T('tlStart') + ' ' + cfg.start)) }
+        if (tl.hasEnd) { known.push(h('span', { key: 'e' }, T('tlEnd') + ' ' + cfg.end)) }
+        return h('div', { className: 'nt-tl' }, head,
+          known.length
+            ? h('div', { className: 'nt-tl-known' }, known)
+            : h('p', { className: 'nt-note', style: { margin: '0' } }, T('tlNeedTimes'))
+        )
+      }
+
+      var span = tl.endSec - tl.startSec
+      var segs = []
+      if (tl.hasBreak) {
+        var b0 = (tl.bsSec - tl.startSec) / span
+        var b1 = (tl.beSec - tl.startSec) / span
+        if (b0 > 0) {
+          segs.push(h('span', { key: 'w1', className: 'nt-tl-seg work', style: { left: '0%', width: (b0 * 100).toFixed(2) + '%' } }))
+        }
+        segs.push(h('span', { key: 'br', className: 'nt-tl-seg rest', style: { left: (b0 * 100).toFixed(2) + '%', width: ((b1 - b0) * 100).toFixed(2) + '%' } }))
+        if (b1 < 1) {
+          segs.push(h('span', { key: 'w2', className: 'nt-tl-seg work', style: { left: (b1 * 100).toFixed(2) + '%', width: ((1 - b1) * 100).toFixed(2) + '%' } }))
+        }
+      } else {
+        segs.push(h('span', { key: 'w', className: 'nt-tl-seg work', style: { left: '0%', width: '100%' } }))
+      }
+      segs.push(h('span', { key: 'now', className: 'nt-tl-now', style: { left: (tl.nowPct * 100).toFixed(2) + '%' } }))
+
+      var breakTxt = cfg.breakStart + '–' + hmTxt(tl.beSec)
+      var labels = [
+        h('span', { key: 's', className: 'nt-tl-lbl' },
+          h('b', null, cfg.start), h('i', null, T('tlStart'))),
+        tl.hasBreak
+          ? h('span', { key: 'b', className: 'nt-tl-lbl mid' },
+            h('b', null, breakTxt), h('i', null, T('tlBreak')))
+          : null,
+        h('span', { key: 'e', className: 'nt-tl-lbl end' },
+          h('b', null, cfg.end), h('i', null, T('tlEnd')))
+      ]
+
+      var prog = (tl.planned && tl.planned > 0)
+        ? h('div', { className: 'nt-tl-prog' },
+          h('span', null, T('tlProgress', { a: durTxt(tl.worked, T), b: durTxt(tl.planned, T) })),
+          h('span', { className: 'nt-tl-pct' }, Math.round(tl.ratio * 100) + '%'))
+        : null
+
+      var ariaParts = [T('tlStart') + ' ' + cfg.start]
+      if (tl.hasBreak) { ariaParts.push(T('tlBreak') + ' ' + breakTxt) }
+      ariaParts.push(T('tlEnd') + ' ' + cfg.end)
+
+      return h('div', { className: 'nt-tl' },
+        head,
+        h('div', {
+          className: 'nt-tl-track',
+          role: 'img',
+          'aria-label': ariaParts.join(' · ')
+        }, segs),
+        h('div', { className: 'nt-tl-labels' }, labels),
+        prog
+      )
+    }
+
+    // ---------- 下班保护设置 ----------
+    // 三项独立开关，默认全关；这里只改提醒策略，不碰排班与收入。
+    function NotifySettings(props) {
+      var T = props.T
+      var notify = props.cfg.notify
+
+      function patch(part) { props.onChange({ notify: part }) }
+      function toggle(key) {
+        var p = {}
+        p[key] = !(notify[key] === true)
+        patch(p)
+      }
+
+      return h('div', { className: 'nt-display' },
+        h('span', { className: 'nt-dot-title', style: { margin: '0 0 2px' } }, T('notifyTitle')),
+        h('p', { className: 'nt-note' }, T('notifyLead')),
+
+        h('label', { className: 'nt-switch' },
+          h('input', {
+            type: 'checkbox',
+            checked: notify.preEnd === true,
+            onChange: function () { toggle('preEnd') }
+          }),
+          h('span', null, T('preEndLabel'))
+        ),
+        h('div', { className: 'nt-rowseg' },
+          h('label', null, T('leadLabel')),
+          h(Seg, {
+            T: T,
+            label: T('leadLabel'),
+            value: String(notify.lead),
+            options: [['5', 'lead5'], ['10', 'lead10'], ['15', 'lead15'], ['30', 'lead30']],
+            onChange: function (v) { patch({ lead: Number(v) }) }
+          })
+        ),
+        h('label', { className: 'nt-switch' },
+          h('input', {
+            type: 'checkbox',
+            checked: notify.atEnd === true,
+            onChange: function () { toggle('atEnd') }
+          }),
+          h('span', null, T('atEndLabel'))
+        ),
+        h('label', { className: 'nt-switch' },
+          h('input', {
+            type: 'checkbox',
+            checked: notify.overtime === true,
+            onChange: function () { toggle('overtime') }
+          }),
+          h('span', null, T('overtimeLabel'))
+        ),
+        h('p', { className: 'nt-note' }, T('overtimeHint')),
+        h('p', { className: 'nt-note', style: { marginBottom: '0' } }, T('notifyNote'))
+      )
+    }
+
+    // ---------- 提醒条 ----------
+    // 内嵌提示是主路径：不申请任何权限，也不会因为权限被拒而消失。
+    // 若浏览器**已经**授予通知权限，则额外发一条系统通知（本插件从不主动申请）。
+    function Reminder(props) {
+      var node = h('div', { className: 'nt-reminder', role: 'status', 'aria-live': 'polite' },
+        h('span', { className: 'nt-reminder-dot' }),
+        h('span', { className: 'nt-reminder-text' }, props.text),
+        h('button', {
+          className: 'nt-reminder-x',
+          type: 'button',
+          title: props.T('close'),
+          'aria-label': props.T('close'),
+          onClick: props.onClose
+        }, '×')
+      )
+      if (ReactDOM) { return ReactDOM.createPortal(node, document.body) }
+      return node
+    }
+
+    /** 只在浏览器**已经**授予通知权限时发系统通知；从不主动申请，被拒也不重试。 */
+    function systemNotify(title, body) {
+      try {
+        if (typeof Notification === 'undefined') { return }
+        if (Notification.permission !== 'granted') { return }
+        var n = new Notification(title, { body: body, tag: 'dsh-niuma-timer' })
+        if (n && typeof n.close === 'function') { setTimeout(function () { try { n.close() } catch (e) { /* ignore */ } }, 8000) }
+      } catch (e) { /* 通知不可用就只留内嵌提示 */ }
+    }
+
     // ---------- floating panel plumbing ----------
     // 浮层的位置全部由「底部胶囊」的实时测量结果推导：
     //   --nt-left   卡片左边（等于胶囊左沿，clamp 进视口）
@@ -948,6 +1383,15 @@ window.__ModuleLoader__.load({
       var displayState = React.useState(false)
       var showDisplay = displayState[0]
       var setShowDisplay = displayState[1]
+      var notifyState = React.useState(false)
+      var showNotify = notifyState[0]
+      var setShowNotify = notifyState[1]
+      var firedState = React.useState(readFired)
+      var fired = firedState[0]
+      var setFired = firedState[1]
+      var bannerState = React.useState(null)
+      var banner = bannerState[0]
+      var setBanner = bannerState[1]
       var tickState = React.useState(function () { return Date.now() })
       var tick = tickState[0]
       var setTick = tickState[1]
@@ -963,16 +1407,18 @@ window.__ModuleLoader__.load({
 
       var now = new Date(tick)
       var r = compute(cfg, now)
-      var statusKey = r.status === 'working' ? 'stWorking'
+      var tl = timelineOf(cfg, now)
+      var statusKey = !tl.ordered ? 'tlNoSchedule' : r.status === 'working' ? 'stWorking'
         : r.status === 'break' ? 'stBreak'
           : r.status === 'off' ? 'stOff'
             : r.status === 'overtime' ? 'stOvertime'
               : r.status === 'idle' ? 'stIdle' : 'stRest'
-      var stampClass = 'nt-stamp' + (r.status === 'break' ? ' blue' : r.status === 'off' ? ' green'
+      var stampClass = 'nt-stamp' + (!tl.ordered ? ' grey' : r.status === 'break' ? ' blue' : r.status === 'off' ? ' green'
         : (r.status === 'idle' || r.status === 'rest') ? ' grey' : '')
 
       var subLine
-      if (r.status === 'rest') { subLine = T('restLine') }
+      if (!tl.ordered) { subLine = T('tlNeedTimes') }
+      else if (r.status === 'rest') { subLine = T('restLine') }
       else if (r.status === 'idle') { subLine = T('idleLine', { t: cfg.start }) }
       else if (r.status === 'overtime') { subLine = T('otLine', { a: money(r.dayPay), b: durTxt(r.overtime, T) }) }
       else if (r.status === 'off') { subLine = T('offLine', { v: money(r.dayPay) }) }
@@ -980,6 +1426,54 @@ window.__ModuleLoader__.load({
 
       var capped = r.status === 'off' || r.status === 'overtime' || r.status === 'rest'
       var monthRatio = r.salary > 0 ? r.monthEarn / r.salary : 0
+
+      // 超时状态：持续显示的一行，不是弹窗，也不参与任何收入计算。
+      var otOn = cfg.notify.overtime === true
+      var otMins = Math.floor(r.overtime / 60)
+      var otLine = (otOn && r.status === 'overtime' && r.overtime > 0)
+        ? h('div', { className: 'nt-ot' },
+          h('span', null, otMins < 1 ? T('otJustNow') : T('otOvertime', { n: otMins })))
+        : null
+
+      // 下班保护：跟着 500ms 的 tick 判断一次。命中就写进「今天已响」账本，
+      // 同一类型同一自然日只响一次；休息日、时间不全、开关关着都不触发。
+      React.useEffect(function () {
+        if (r.status === 'rest') { return }
+        if (!validTime(cfg.start) || !validTime(cfg.end)) { return }
+        var endSec = toSec(cfg.end)
+        if (!(endSec > toSec(cfg.start))) { return }
+        var n = cfg.notify
+        if (n.preEnd !== true && n.atEnd !== true) { return }
+
+        var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+        var today = dayKey(now)
+        var base = fired.day === today ? fired : { day: today, preEnd: false, atEnd: false }
+        var hit = null
+
+        if (n.preEnd === true && base.preEnd !== true) {
+          var lead = oneOf(Number(n.lead), LEADS, 10) * 60
+          if (nowSec >= endSec - lead && nowSec < endSec) {
+            hit = { kind: 'preEnd', text: T('remPreEnd', { t: durTxt(endSec - nowSec, T) }) }
+          }
+        }
+        if (!hit && n.atEnd === true && base.atEnd !== true) {
+          // 到点后 1 小时内补发一次；再晚就不补，免得半夜弹出一条陈年提醒。
+          if (nowSec >= endSec && nowSec - endSec <= 3600) {
+            hit = { kind: 'atEnd', text: T('remAtEnd', { t: cfg.end }) }
+          }
+        }
+        if (!hit) { return }
+
+        var nextFired = {
+          day: today,
+          preEnd: base.preEnd === true || hit.kind === 'preEnd',
+          atEnd: base.atEnd === true || hit.kind === 'atEnd'
+        }
+        writeFired(nextFired)
+        setFired(nextFired)
+        setBanner(hit)
+        systemNotify(T('title'), hit.text)
+      }, [tick, fired, r.status])
 
       var dots = []
       var dayCount = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
@@ -1065,7 +1559,10 @@ window.__ModuleLoader__.load({
             primaryNode
           ),
           show.status
-            ? h('span', { key: 'badge', className: 'nt-full-badge ' + badgeClass }, T(statusKey))
+            ? h('span', { key: 'badge', className: 'nt-full-badge ' + badgeClass },
+              (otOn && r.status === 'overtime')
+                ? T('otBadge', { n: Math.max(1, otMins) })
+                : T(statusKey))
             : null,
           (show.progress && !moneyHidden && amountNode)
             ? h('span', { key: 'prog', className: 'nt-full-prog' },
@@ -1103,15 +1600,18 @@ window.__ModuleLoader__.load({
             h('span', { className: 'cur' }, '¥'),
             h('span', { className: 'val' }, money(r.todayEarn))
           ),
-          h('div', { className: 'nt-rate' }, capped ? T('capped') : T('perSec', { v: r.secPay.toFixed(4) })),
+          tl.ordered ? h('div', { className: 'nt-rate' }, capped ? T('capped') : T('perSec', { v: r.secPay.toFixed(4) })) : null,
           h('div', { className: 'nt-sub' }, subLine),
 
-          h('div', { className: 'nt-bar' },
-            h('div', { className: 'nt-fill', style: { width: Math.round(Math.min(1, r.progress) * 100) + '%' } })),
-          h('div', { className: 'nt-barnote' },
+          tl.ordered ? h('div', { className: 'nt-bar' },
+            h('div', { className: 'nt-fill', style: { width: Math.round(Math.min(1, r.progress) * 100) + '%' } })) : null,
+          tl.ordered ? h('div', { className: 'nt-barnote' },
             h('span', null, T('progress', { p: (r.progress * 100).toFixed(1) })),
             h('span', null, (r.status === 'off' || r.status === 'overtime' || r.status === 'rest') ? T('finished') : T('remain', { t: clockTxt(r.remain) }))
-          ),
+          ) : null,
+
+          h(Timeline, { T: T, cfg: cfg, tl: tl, rest: r.status === 'rest', status: r.status }),
+          otLine,
 
           h('div', { className: 'nt-meta' },
             h('div', { className: 'cell' },
@@ -1136,14 +1636,25 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 onClick: function () {
                   setShowForm(false)
+                  setShowNotify(false)
                   setShowDisplay(!(showDisplay && !showForm))
                 }
               }, T('displayTitle')),
+              h('button', {
+                className: 'nt-btn' + (showNotify ? ' primary' : ''),
+                type: 'button',
+                onClick: function () {
+                  setShowForm(false)
+                  setShowDisplay(false)
+                  setShowNotify(!showNotify)
+                }
+              }, T('notifyTitle')),
               h('button', {
                 className: 'nt-btn' + (showForm ? ' primary' : ''),
                 type: 'button',
                 onClick: function () {
                   setShowDisplay(false)
+                  setShowNotify(false)
                   setShowForm(!showForm)
                 }
               }, showForm ? T('close') : T('edit'))
@@ -1160,7 +1671,7 @@ window.__ModuleLoader__.load({
             }
           }) : null,
 
-          (showDisplay && !showForm) ? h(DisplaySettings, {
+          (showDisplay && !showForm && !showNotify) ? h(DisplaySettings, {
             cfg: cfg,
             T: T,
             onChange: function (patch) {
@@ -1169,26 +1680,44 @@ window.__ModuleLoader__.load({
               writeCfg(merged)
               if (patch.hidden) { setOpen(false) }
             }
+          }) : null,
+
+          (showNotify && !showForm && !showDisplay) ? h(NotifySettings, {
+            cfg: cfg,
+            T: T,
+            onChange: function (patch) {
+              var merged = mergeCfg(cfg, patch)
+              setCfg(merged)
+              writeCfg(merged)
+            }
           }) : null
         )
       )
 
+      // 提醒条：独立浮层，胶囊隐藏时也照常出现（否则「下班保护」会被胶囊一起关掉）。
+      var reminder = banner
+        ? h(Reminder, { T: T, text: banner.text, onClose: function () { setBanner(null) } })
+        : null
+
       // 一键隐藏：胶囊整体不渲染，只在右下角留一个极小圆点把它们叫回来。
       if (cfg.hidden) {
-        return h('button', {
-          className: 'nt-dot-restore',
-          type: 'button',
-          title: T('showChip'),
-          'aria-label': T('showChip'),
-          onClick: function () {
-            var merged = mergeCfg(cfg, { hidden: false })
-            setCfg(merged)
-            writeCfg(merged)
-          }
-        }, '🐮')
+        return h(React.Fragment, null,
+          h('button', {
+            className: 'nt-dot-restore',
+            type: 'button',
+            title: T('showChip'),
+            'aria-label': T('showChip'),
+            onClick: function () {
+              var merged = mergeCfg(cfg, { hidden: false })
+              setCfg(merged)
+              writeCfg(merged)
+            }
+          }, '🐮'),
+          reminder
+        )
       }
 
-      return h('div', { className: 'nt-wrap', 'data-place': cfg.place }, chip, body)
+      return h('div', { className: 'nt-wrap', 'data-place': cfg.place }, chip, body, reminder)
     }
 
     // ---------- plugin ----------
