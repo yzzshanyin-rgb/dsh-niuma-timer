@@ -32,7 +32,12 @@ window.__ModuleLoader__.load({
       end: '18:00',
       breakStart: '12:00',
       breakMin: 60,
+      // 已废弃：工作日总数改为由日期规则推导，保留字段仅为兼容旧配置读取。
       workdays: 0,
+      // ---- 工作日覆盖：'YYYY-MM-DD' -> 'work' | 'rest'，未记录的日子按星期默认规则 ----
+      overrides: {},
+      // ---- 首次使用引导：'none'（还没走过）| 'done'（已完成）| 'skipped'（稍后设置） ----
+      onboard: 'none',
       // ---- 迷你仪表盘显示设置 ----
       mode: 'full',        // 'mini' | 'full' | 'fun'
       hideMoney: false,    // 隐藏所有金额，只留工作进度
@@ -62,6 +67,8 @@ window.__ModuleLoader__.load({
     var PLACES = ['left', 'center', 'right']
     var DENSITIES = ['compact', 'cozy']
     var LEADS = [5, 10, 15, 30]
+    var ONBOARD = ['none', 'done', 'skipped']
+    var OV_KINDS = ['work', 'rest']
 
     /** 合并保存的配置：深拷贝 DEFAULTS（fields / notify 是嵌套对象，不能共享引用）。 */
     function cloneDefaults() {
@@ -112,15 +119,15 @@ window.__ModuleLoader__.load({
         monthRatio: '本月已挣 {p}% 月薪',
         dots: '工作日打卡',
         setup: '记一下我的情况',
-        edit: '改数据',
+        edit: '基础设置',
         close: '收起来',
         salaryLabel: '月薪（元，到手）',
         startLabel: '上班时间',
         endLabel: '下班时间',
         breakStartLabel: '午休开始',
         breakMinLabel: '午休时长（分钟）',
-        workdaysLabel: '本月应出勤天数',
-        workdaysHint: '填 0 = 按周一到周五自动算（本月 {n} 天）',
+        workdaysLabel: '当月工作日（自动统计）',
+        workdaysHint: '由下方日历推导，默认周一至周五上班（本月 {n} 天）',
         save: '存下来',
         saved: '存好了',
         errSalary: '月薪得大于 0',
@@ -168,8 +175,69 @@ window.__ModuleLoader__.load({
         hideChipLabel: '隐藏胶囊',
         hideChipHint: '隐藏后右下角会出现一个小圆点，点它回来',
         showChip: '显示牛马费胶囊',
-        displayTitle: '显示设置',
+        displayTitle: '显示偏好',
         moneyHidden: '金额已隐藏',
+
+        // ---- V1.4 设置分区 / 月历 / 预览 / 引导 / 未保存保护 ----
+        sectBasic: '基础设置',
+        sectDisplay: '显示偏好',
+        sectNotify: '下班保护',
+        sectBasicNote: '影响收入与工作时长的数据。改完必须点「保存」才会生效。',
+        sectDisplayNote: '只控制界面怎么显示，修改后立即生效，不影响底层薪资数据。',
+        sectNotifyNote: '沿用现有提醒能力，修改后立即生效。',
+        needsSave: '需要保存',
+        instantSave: '修改后立即生效',
+        unsaved: '未保存',
+        leaveTitle: '有未保存的修改',
+        leaveBody: '现在离开会丢掉这些改动。',
+        leaveStay: '继续编辑',
+        leaveDiscard: '放弃修改',
+        leaveSave: '保存并离开',
+
+        calTitle: '当月工作日',
+        calTotal: '当月工作日 {n} 天',
+        calNote: '默认周一至周五为工作日；节假日及调休日可手动调整，不联网、不自动同步官方日历。',
+        calWork: '工作日',
+        calRest: '休息日',
+        calCustom: '已手动调整',
+        calPick: '先点一个日期，再选设为工作日或休息日',
+        calPicked: '已选 {d} 日：当前为{kind}',
+        calSetWork: '设为工作日',
+        calSetRest: '设为休息日',
+        calReset: '恢复默认',
+        calWd: '一|二|三|四|五|六|日',
+
+        pvTitle: '实时预览',
+        pvBadge: '预估 · 未保存',
+        pvWorkdays: '当月工作日',
+        pvNet: '每日净工时',
+        pvDayPay: '预计日薪',
+        pvHourPay: '预计时薪',
+        pvSecPay: '预计秒薪',
+        pvNeedValid: '把必填项填对之后才会给出预览。',
+        pvZeroDays: '当月工作日为 0，日薪无法计算 —— 请至少留一个工作日。',
+        pvHidden: '金额已隐藏',
+
+        obTitle: '先把你的情况填一下',
+        obLead: '下面这些数字是示例，不是你真实的工资。填完才会开始按你的情况算。',
+        obStep1: '① 到手月薪',
+        obStep2: '② 上下班时间',
+        obStep3: '③ 午休',
+        obStep4: '④ 确认',
+        obNext: '下一步',
+        obPrev: '上一步',
+        obFinish: '完成设置',
+        obLater: '稍后设置',
+        obSummary: '月薪 ¥{s} · 每天 {a} 到 {b} · 午休 {m} 分钟',
+        obCalHint: '当月默认按周一至周五识别工作日；节假日和调休可以在「基础设置」里逐日调整。',
+        obSampleBadge: '示例数据',
+        obSampleNote: '还没填自己的数据，这里显示的是示例配置。',
+        sampleTip: '示例数据 · 去「基础设置」填你真实的月薪',
+        moneyHiddenNote: '金额已隐藏（可在「显示偏好」里恢复）',
+        otLineHid: '今日计费已封顶 · 白干 {b}',
+        offLineHid: '今日计费已封顶 · 快走，别回头',
+        dotWork: '工作日',
+        dotRest: '休息日',
 
         // ---- 今日时间轴（只读） ----
         tlTitle: '今日时间轴',
@@ -238,8 +306,8 @@ window.__ModuleLoader__.load({
         endLabel: 'End',
         breakStartLabel: 'Break starts',
         breakMinLabel: 'Break length (min)',
-        workdaysLabel: 'Workdays this month',
-        workdaysHint: '0 = count Mon–Fri automatically ({n} this month)',
+        workdaysLabel: 'Workdays (auto)',
+        workdaysHint: 'Derived from the calendar below, Mon–Fri by default ({n} this month)',
         save: 'Save',
         saved: 'Saved',
         errSalary: 'Monthly pay must be above 0',
@@ -289,6 +357,67 @@ window.__ModuleLoader__.load({
         showChip: 'Show the work-yield chip',
         displayTitle: 'Display',
         moneyHidden: 'Amounts hidden',
+
+        // ---- V1.4 sections / calendar / preview / onboarding / unsaved guard ----
+        sectBasic: 'Basic',
+        sectDisplay: 'Display',
+        sectNotify: 'End of day',
+        sectBasicNote: 'Data that drives earnings and working hours. Changes apply only after you press Save.',
+        sectDisplayNote: 'Interface only — takes effect immediately and never touches your salary data.',
+        sectNotifyNote: 'Same reminder features as before; changes apply immediately.',
+        needsSave: 'needs saving',
+        instantSave: 'applies immediately',
+        unsaved: 'Unsaved',
+        leaveTitle: 'Unsaved changes',
+        leaveBody: 'Leaving now will discard them.',
+        leaveStay: 'Keep editing',
+        leaveDiscard: 'Discard',
+        leaveSave: 'Save and leave',
+
+        calTitle: 'Workdays this month',
+        calTotal: '{n} workdays this month',
+        calNote: 'Mon–Fri count as workdays by default; mark holidays and make-up days yourself. No network, no official calendar sync.',
+        calWork: 'Workday',
+        calRest: 'Rest day',
+        calCustom: 'manually set',
+        calPick: 'Pick a date, then choose workday or rest day',
+        calPicked: 'Day {d} selected: {kind}',
+        calSetWork: 'Set workday',
+        calSetRest: 'Set rest day',
+        calReset: 'Reset to default',
+        calWd: 'M|T|W|T|F|S|S',
+
+        pvTitle: 'Live preview',
+        pvBadge: 'estimated · unsaved',
+        pvWorkdays: 'Workdays',
+        pvNet: 'Net hours',
+        pvDayPay: 'Day pay',
+        pvHourPay: 'Hourly',
+        pvSecPay: 'Per second',
+        pvNeedValid: 'Fill in the required fields to see a preview.',
+        pvZeroDays: 'Zero workdays this month — day pay cannot be computed. Keep at least one workday.',
+        pvHidden: 'Amounts hidden',
+
+        obTitle: 'Set up your own numbers first',
+        obLead: "Everything below is a sample, not your real salary. Fill it in and the timer starts using your numbers.",
+        obStep1: '1. Monthly salary',
+        obStep2: '2. Working hours',
+        obStep3: '3. Lunch break',
+        obStep4: '4. Review',
+        obNext: 'Next',
+        obPrev: 'Back',
+        obFinish: 'Finish setup',
+        obLater: 'Later',
+        obSummary: '¥{s} per month · {a} to {b} · {m} min lunch',
+        obCalHint: 'Mon–Fri count as workdays this month; adjust holidays and make-up days day by day under Basic.',
+        obSampleBadge: 'Sample data',
+        obSampleNote: "You haven't entered your own numbers yet — these are sample defaults.",
+        sampleTip: 'Sample data · open Basic to enter your real salary',
+        moneyHiddenNote: 'Amounts hidden (restore them under Display)',
+        otLineHid: 'Capped for today · {b} unpaid',
+        offLineHid: 'Capped for today · go home already',
+        dotWork: 'Workday',
+        dotRest: 'Rest day',
 
         // ---- today's timeline (read-only) ----
         tlTitle: "Today's hours",
@@ -369,6 +498,7 @@ window.__ModuleLoader__.load({
             out.notify.overtime = saved.notify.overtime === true
             out.notify.lead = oneOf(Number(saved.notify.lead), LEADS, 10)
           }
+          out.overrides = readOverrides(saved.overrides)
         }
       } catch (e) { /* keep defaults */ }
       // 枚举值做一次白名单校正：旧版本存下的或手改坏的值不该让界面崩掉。
@@ -377,6 +507,24 @@ window.__ModuleLoader__.load({
       out.density = oneOf(out.density, DENSITIES, 'cozy')
       out.hideMoney = out.hideMoney === true
       out.hidden = out.hidden === true
+      out.onboard = oneOf(out.onboard, ONBOARD, 'none')
+      return out
+    }
+
+    /**
+     * 工作日覆盖表：只接受 'YYYY-MM-DD' 键与 'work' / 'rest' 值。
+     * 坏数据一律丢掉 —— 「没有覆盖记录」必须回落到星期默认规则，
+     * 绝不能因为读不懂就把整天误判成休息。
+     */
+    var OV_KEY_RE = /^\d{4}-\d{2}-\d{2}$/
+
+    function readOverrides(raw) {
+      var out = {}
+      if (!raw || typeof raw !== 'object') { return out }
+      for (var k in raw) {
+        if (!OV_KEY_RE.test(k)) { continue }
+        if (OV_KINDS.indexOf(raw[k]) >= 0) { out[k] = raw[k] }
+      }
       return out
     }
 
@@ -438,6 +586,22 @@ window.__ModuleLoader__.load({
           next[key] = pv
         }
       }
+      if (patch && Object.prototype.hasOwnProperty.call(patch, 'overrides')) {
+        // 覆盖表按日期逐键合并：值为 null / 其他非法值等于「恢复默认」。
+        var ovSrc = base.overrides && typeof base.overrides === 'object' ? base.overrides : {}
+        var ovNext = {}
+        var ok
+        for (ok in ovSrc) { ovNext[ok] = ovSrc[ok] }
+        var ovPatch = patch.overrides && typeof patch.overrides === 'object' ? patch.overrides : {}
+        for (ok in ovPatch) {
+          if (!OV_KEY_RE.test(ok)) { continue }
+          if (OV_KINDS.indexOf(ovPatch[ok]) >= 0) { ovNext[ok] = ovPatch[ok] }
+          else { delete ovNext[ok] }
+        }
+        next.overrides = ovNext
+      }
+      next.overrides = readOverrides(next.overrides)
+      next.onboard = oneOf(next.onboard, ONBOARD, 'none')
       next.mode = oneOf(next.mode, MODES, 'full')
       next.place = oneOf(next.place, PLACES, 'center')
       next.density = oneOf(next.density, DENSITIES, 'cozy')
@@ -482,28 +646,51 @@ window.__ModuleLoader__.load({
       return parts.join('.')
     }
 
+    /** 默认规则：周一至周五上班，周六周日休息。只在没有用户覆盖时使用。 */
     function isWeekend(d) {
       var w = d.getDay()
       return w === 0 || w === 6
     }
 
-    function autoWorkdays(d) {
+    function dateKey(d) {
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+    }
+
+    /**
+     * 唯一的日期判定入口 —— 今日状态、当月工作日总数、已过工作日、点阵，
+     * 全部只问这一个函数，不允许任何地方再自己写一套 isWeekend 判断。
+     * 优先读用户覆盖；没有覆盖才回落到星期默认规则。
+     */
+    function getDayType(overrides, date) {
+      var ov = overrides && overrides[dateKey(date)]
+      if (ov === 'work' || ov === 'rest') { return ov }
+      return isWeekend(date) ? 'rest' : 'work'
+    }
+
+    /** 当月工作日总数：由 getDayType 逐日推导，不存在第二个可编辑的总数来源。 */
+    function monthWorkdays(d, overrides) {
       var y = d.getFullYear()
       var m = d.getMonth()
       var days = new Date(y, m + 1, 0).getDate()
       var count = 0
       for (var i = 1; i <= days; i++) {
-        if (!isWeekend(new Date(y, m, i))) { count++ }
+        if (getDayType(overrides, new Date(y, m, i)) === 'work') { count++ }
       }
       return count
     }
 
-    function workdaysBeforeToday(d) {
+    /** 只看「今天之前」的已过工作日，口径与 monthWorkdays 完全一致。 */
+    function workdaysBeforeToday(d, overrides) {
       var count = 0
       for (var i = 1; i < d.getDate(); i++) {
-        if (!isWeekend(new Date(d.getFullYear(), d.getMonth(), i))) { count++ }
+        if (getDayType(overrides, new Date(d.getFullYear(), d.getMonth(), i)) === 'work') { count++ }
       }
       return count
+    }
+
+    /** 未做任何覆盖时的默认工作日数，仅用于设置页的说明文案。 */
+    function autoWorkdays(d) {
+      return monthWorkdays(d, {})
     }
 
     // ---------- 今日时间轴（只读） ----------
@@ -593,12 +780,13 @@ window.__ModuleLoader__.load({
       var beSec = Math.min(bsSec + bmSec, endSec)
       var netSec = Math.max(1, (endSec - startSec) - (beSec - bsSec))
 
-      var manual = Number(cfg.workdays) || 0
-      var totalWorkdays = manual > 0 ? Math.min(31, Math.max(1, Math.round(manual))) : autoWorkdays(now)
+      // 工作日总数只来自日期规则（默认星期 + 用户覆盖），不再接受独立手填的总数。
+      var ov = cfg.overrides || {}
+      var totalWorkdays = monthWorkdays(now, ov)
 
       var salary = Math.max(0, Number(cfg.salary) || 0)
       var dayPay = totalWorkdays > 0 ? salary / totalWorkdays : 0
-      var doneDays0 = workdaysBeforeToday(now)
+      var doneDays0 = workdaysBeforeToday(now, ov)
 
       // 排班不完整（时间缺失或写坏）：不猜时间，也不猜今天的收入。
       // 今日按 0 计，月收入仍只累计已经走完的工作日 —— 不虚构、不出现负时长。
@@ -617,6 +805,7 @@ window.__ModuleLoader__.load({
           totalWorkdays: totalWorkdays,
           autoWorkdays: autoWorkdays(now),
           doneDays: doneDays0,
+          todayIsWorkday: false,
           monthEarn: Math.min(salary, dayPay * doneDays0),
           salary: salary,
           netSec: 1
@@ -626,11 +815,13 @@ window.__ModuleLoader__.load({
       var secPay = dayPay / netSec
 
       var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000
-      var weekend = isWeekend(now)
+      // 今天是不是工作日同样只问 getDayType：把某个周末改成工作日后，
+      // 它就会像普通工作日一样参与计时与累计。
+      var restDay = getDayType(ov, now) === 'rest'
       var worked = 0
       var status = 'working'
 
-      if (weekend) {
+      if (restDay) {
         status = 'rest'
       } else if (nowSec < startSec) {
         status = 'idle'
@@ -649,7 +840,7 @@ window.__ModuleLoader__.load({
       worked = Math.max(0, Math.min(worked, netSec))
 
       var todayEarn = dayPay * (worked / netSec)
-      var doneDays = workdaysBeforeToday(now)
+      var doneDays = workdaysBeforeToday(now, ov)
       var monthEarn = Math.min(salary, dayPay * doneDays + todayEarn)
 
       return {
@@ -660,15 +851,62 @@ window.__ModuleLoader__.load({
         todayEarn: todayEarn,
         worked: worked,
         remain: Math.max(0, netSec - worked),
-        overtime: weekend ? 0 : Math.max(0, nowSec - endSec),
+        overtime: restDay ? 0 : Math.max(0, nowSec - endSec),
         progress: worked / netSec,
         totalWorkdays: totalWorkdays,
         autoWorkdays: autoWorkdays(now),
         doneDays: doneDays,
+        todayIsWorkday: !restDay,
         monthEarn: monthEarn,
         salary: salary,
         netSec: netSec
       }
+    }
+
+    // ---------- 基础设置的草稿模型 ----------
+    // 基础设置改的是「草稿」，点保存才写盘；显示偏好与下班保护是即时保存。
+    // 草稿比较只比这五个字段 —— 单位统一成字符串，避免 12000 与 '12000' 打架。
+    function draftOf(c) {
+      return {
+        salary: String(c.salary),
+        start: c.start,
+        end: c.end,
+        breakStart: c.breakStart,
+        breakMin: String(c.breakMin)
+      }
+    }
+
+    function sameDraft(a, b) {
+      return a.salary === b.salary && a.start === b.start && a.end === b.end &&
+        a.breakStart === b.breakStart && a.breakMin === b.breakMin
+    }
+
+    /** 返回错误码（对应 i18n 键与需要聚焦的输入框），空串表示通过。 */
+    function validateDraft(d) {
+      if (!(Number(d.salary) > 0)) { return 'salary' }
+      if (!validTime(d.start) || !validTime(d.end)) { return 'time' }
+      if (toSec(d.end) <= toSec(d.start)) { return 'order' }
+      if (toSec(d.breakStart) < toSec(d.start) || toSec(d.breakStart) > toSec(d.end)) { return 'break' }
+      var net = (toSec(d.end) - toSec(d.start)) - Math.max(0, Number(d.breakMin) || 0) * 60
+      if (net <= 0) { return 'net' }
+      return ''
+    }
+
+    var ERR_KEY = { salary: 'errSalary', time: 'errTime', order: 'errOrder', break: 'errBreak', net: 'errNet' }
+    var ERR_FOCUS = { salary: 'salary', time: 'start', order: 'start', break: 'breakStart', net: 'breakMin' }
+
+    /**
+     * 本地是否已经有一份「有效」的用户配置。
+     * 老用户升级时这里为 true —— 他们不该被首次引导拦一次，原配置也不能被覆盖。
+     */
+    function hasSavedConfig() {
+      try {
+        var raw = window.localStorage.getItem(STORE_KEY)
+        if (!raw) { return false }
+        var o = JSON.parse(raw)
+        if (!o || typeof o !== 'object' || Array.isArray(o)) { return false }
+        return Number(o.salary) > 0 && validTime(o.start) && validTime(o.end)
+      } catch (e) { return false }
     }
 
     // ---------- styles ----------
@@ -824,6 +1062,10 @@ window.__ModuleLoader__.load({
       '.nt-day.done{background-color:#7FA36B;background-image:repeating-linear-gradient(45deg,#7FA36B 0 3px,#96B884 3px 6px);border-color:rgba(51,47,42,.5)}',
       '.nt-day.today{background-color:#EABF5C;border-color:#332F2A;box-shadow:0 0 0 2px rgba(234,191,92,.35)}',
       '.nt-day.pending{background:repeating-linear-gradient(45deg,rgba(51,47,42,.05) 0 3px,transparent 3px 6px);border-style:dashed}',
+      /* 休息日：空心虚线，一眼能和工作日分开（不做成「没渲染」） */
+      '.nt-day.rest{background:transparent;border-style:dashed;border-color:rgba(51,47,42,.26);opacity:.72}',
+      /* 金额隐藏时的统一占位符：不显示任何真实数字 */
+      '.nt-amount-hid .val{letter-spacing:3px;color:#B3A899}',
       '.nt-foot{margin-top:12px;padding-top:10px;border-top:1.5px dashed rgba(51,47,42,.22);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#8A8275;letter-spacing:.3px;flex-wrap:wrap}',
       '.nt-foot-actions{display:inline-flex;gap:6px;flex:0 0 auto}',
       '.nt-display{margin-top:12px;padding-top:12px;border-top:1.5px dashed rgba(51,47,42,.22)}',
@@ -888,6 +1130,67 @@ window.__ModuleLoader__.load({
       '.nt-err{min-height:15px;font-size:11.5px;color:#D2605A;letter-spacing:.5px;margin-bottom:4px}',
       '.nt-actions{display:flex;gap:8px;justify-content:flex-end}',
 
+      /* ---- 设置分区（基础设置 / 显示偏好 / 下班保护） ---- */
+      '.nt-sect{margin-top:12px;padding-top:11px;border-top:1.5px dashed rgba(51,47,42,.2)}',
+      '.nt-sect:first-child{margin-top:2px;padding-top:0;border-top:0}',
+      '.nt-sect-head{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}',
+      '.nt-sect-title{font-size:13px;letter-spacing:1.4px;color:#332F2A}',
+      '.nt-sect-flag{font-size:9px;letter-spacing:.4px;padding:1px 5px;border-radius:2px;white-space:nowrap;color:#7A6A3C;background:rgba(234,191,92,.28);border:1px solid rgba(234,191,92,.55)}',
+      '.nt-sect-note{margin:3px 0 8px;font-size:10.5px;line-height:1.55;color:#9A9285}',
+
+      /* ---- 当月月历 ---- */
+      '.nt-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:7px}',
+      '.nt-cal-wd{text-align:center;font-size:9px;color:#A79E91;padding-bottom:1px}',
+      '.nt-cal-d{position:relative;font-family:inherit;font-size:11px;line-height:1;padding:5px 0 6px;border-radius:2px;border:1px solid transparent;color:#6D6558;background:rgba(255,253,246,.55);cursor:pointer;transition:transform .08s}',
+      '.nt-cal-d:hover{transform:translateY(-1px)}',
+      '.nt-cal-d.rest{color:#B3A899;background:transparent;border-style:dashed;border-color:rgba(51,47,42,.18)}',
+      '.nt-cal-d.work{color:#332F2A;background:rgba(234,191,92,.22);border-color:rgba(234,191,92,.5)}',
+      '.nt-cal-d.custom::after{content:"";position:absolute;left:50%;bottom:1.5px;width:3px;height:3px;margin-left:-1.5px;border-radius:50%;background:#C4674F}',
+      '.nt-cal-d.today{box-shadow:inset 0 0 0 1.5px #4C7B8C}',
+      '.nt-cal-d[aria-pressed="true"]{outline:2px solid #4C7B8C;outline-offset:-1px}',
+      '.nt-cal-d:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2563eb);outline-offset:-1px}',
+      '.nt-cal-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}',
+      '.nt-cal-sel{font-size:10.5px;color:#6D6558;margin-right:auto}',
+      '.nt-cal-btn{font-family:inherit;font-size:10.5px;letter-spacing:.3px;padding:2px 7px;border-radius:2px;border:1px solid rgba(51,47,42,.26);background:rgba(255,253,246,.8);color:#4A443B;cursor:pointer}',
+      '.nt-cal-btn:hover{background:#FFF6DF}',
+      '.nt-cal-btn[disabled]{opacity:.45;cursor:default}',
+      '.nt-cal-legend{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px;font-size:9.5px;color:#9A9285}',
+      '.nt-cal-legend i{display:inline-block;width:8px;height:8px;margin-right:3px;border-radius:1px;vertical-align:-1px;border:1px solid rgba(51,47,42,.24)}',
+      '.nt-cal-legend i.work{background:rgba(234,191,92,.75);border-color:rgba(234,191,92,.9)}',
+      '.nt-cal-legend i.rest{background:transparent;border-style:dashed}',
+      '.nt-cal-legend i.custom{background:#C4674F;border-color:#C4674F;border-radius:50%;width:5px;height:5px}',
+
+      /* ---- 实时预览 ---- */
+      '.nt-pv{margin-top:11px;padding:8px 9px 7px;border:1px dashed rgba(76,123,140,.45);border-radius:3px;background:rgba(76,123,140,.055)}',
+      '.nt-pv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}',
+      '.nt-pv-title{font-size:11.5px;letter-spacing:1.2px;color:#3E6473}',
+      '.nt-pv-badge{font-size:9px;letter-spacing:.3px;color:#7A6A3C;background:rgba(234,191,92,.32);border-radius:2px;padding:1px 4px;white-space:nowrap}',
+      '.nt-pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}',
+      '.nt-pv-item{display:flex;justify-content:space-between;align-items:baseline;gap:6px;min-width:0;font-size:11px;color:#5D564B}',
+      '.nt-pv-k{color:#9A9285;white-space:nowrap}',
+      '.nt-pv-v{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;color:#332F2A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nt-pv-warn{margin:0;font-size:10.5px;line-height:1.55;color:#C4674F}',
+
+      /* ---- 遮罩弹窗（首次引导 / 未保存确认） ---- */
+      '.nt-mask{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(38,34,29,.3)}',
+      '.nt-modal{width:100%;max-width:330px;max-height:86vh;overflow:auto;padding:15px 15px 12px;border-radius:3px;background:#FFFDF6;border:1.5px solid #332F2A;box-shadow:5px 5px 0 rgba(51,47,42,.2);font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif}',
+      '.nt-modal-title{display:block;font-size:14px;letter-spacing:1.4px;color:#332F2A;margin-bottom:4px}',
+      '.nt-modal-lead{margin:0 0 10px;font-size:11.5px;line-height:1.65;color:#6D6558}',
+      '.nt-modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}',
+      '.nt-modal-body{display:flex;flex-direction:column;gap:8px}',
+
+      /* ---- 首次引导 ---- */
+      '.nt-ob-dots{display:flex;gap:5px;margin-bottom:9px}',
+      '.nt-ob-dot{flex:1;height:3px;border-radius:2px;background:rgba(51,47,42,.14)}',
+      '.nt-ob-dot.on{background:#EABF5C}',
+      '.nt-ob-step{font-size:12px;letter-spacing:.8px;color:#332F2A;margin-bottom:6px}',
+      '.nt-ob-summary{display:flex;flex-direction:column;gap:4px;font-size:11.5px;line-height:1.5;color:#5D564B}',
+      '.nt-ob-summary b{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;color:#332F2A}',
+      '.nt-ob-note{margin:9px 0 0;font-size:10.5px;line-height:1.55;color:#9A9285}',
+
+      /* ---- 「示例数据」标记 ---- */
+      '.nt-sample{font-size:9px;letter-spacing:.4px;padding:1px 5px;border-radius:2px;white-space:nowrap;color:#8A5A2B;background:rgba(196,103,79,.14);border:1px solid rgba(196,103,79,.38)}',
+
       '@media (prefers-color-scheme: dark){.nt-chip{box-shadow:2px 2px 0 rgba(0,0,0,.4)}}',
       /* 窄屏：浮层铺满可用宽度，跟着视口走，不再对齐胶囊 */
       '@media (max-width:620px){.nt-panel{left:12px;right:12px;width:auto;max-width:none}.nt-layer{padding:12px}.nt-pointer{display:none}}',
@@ -908,7 +1211,8 @@ window.__ModuleLoader__.load({
       '@media (max-width:520px){.nt-reminder{left:12px;right:12px;max-width:none}}',
       '@media (max-width:440px){.nt-tl-lbl i{display:none}.nt-tl-lbl b{font-size:11px}.nt-tl-prog{font-size:10.5px}}',
       '@media (max-width:300px){.nt-tl-prog>span:first-child{white-space:normal}.nt-tl-known{gap:8px}}',
-      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}}'
+      '@media (max-width:420px){.nt-pv-grid{grid-template-columns:1fr}.nt-cal{gap:2px}.nt-cal-d{font-size:10px;padding:4px 0 5px}}',
+      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}.nt-cal-d{transition:none}}'
     ].join('\n')
     // ---------- components ----------
     function Day(props) {
@@ -918,24 +1222,8 @@ window.__ModuleLoader__.load({
     function Settings(props) {
       var T = props.T
       var cfg = props.cfg
-      var st = React.useState(function () {
-        return {
-          salary: String(cfg.salary),
-          start: cfg.start,
-          end: cfg.end,
-          breakStart: cfg.breakStart,
-          breakMin: String(cfg.breakMin),
-          workdays: String(cfg.workdays)
-        }
-      })
-      var draft = st[0]
-      var setDraft = st[1]
-      var err = React.useState('')
-      var errMsg = err[0]
-      var setErr = err[1]
-      var saved = React.useState(false)
-      var isSaved = saved[0]
-      var setIsSaved = saved[1]
+      var draft = props.draft
+      var setDraft = props.setDraft
 
       function patch(key, value) {
         setDraft(function (prev) {
@@ -944,38 +1232,14 @@ window.__ModuleLoader__.load({
           next[key] = value
           return next
         })
-        setErr('')
-        setIsSaved(false)
-      }
-
-      function submit() {
-        var salary = Number(draft.salary)
-        var workdays = Number(draft.workdays)
-        if (!(salary > 0)) { setErr(T('errSalary')); return }
-        if (!validTime(draft.start) || !validTime(draft.end)) { setErr(T('errTime')); return }
-        if (toSec(draft.end) <= toSec(draft.start)) { setErr(T('errOrder')); return }
-        if (toSec(draft.breakStart) < toSec(draft.start) || toSec(draft.breakStart) > toSec(draft.end)) {
-          setErr(T('errBreak')); return
-        }
-        if (!isFinite(workdays) || workdays < 0 || workdays > 31) { setErr(T('errDays')); return }
-        var net = (toSec(draft.end) - toSec(draft.start)) - Math.max(0, Number(draft.breakMin) || 0) * 60
-        if (net <= 0) { setErr(T('errNet')); return }
-
-        props.onSave({
-          salary: salary,
-          start: draft.start,
-          end: draft.end,
-          breakStart: draft.breakStart,
-          breakMin: Math.max(0, Number(draft.breakMin) || 0),
-          workdays: Math.round(workdays)
-        })
-        setIsSaved(true)
+        props.onEdit()
       }
 
       function field(key, label, type, extra) {
         return h('div', { className: 'nt-field' },
-          h('label', null, label),
+          h('label', { htmlFor: 'nt-in-' + key }, label),
           h('input', {
+            id: 'nt-in-' + key,
             type: type,
             value: draft[key],
             step: extra && extra.step,
@@ -987,20 +1251,41 @@ window.__ModuleLoader__.load({
       }
 
       return h('div', { className: 'nt-form' },
-        h('div', { className: 'nt-row' }, field('salary', T('salaryLabel'), 'number', { step: 100, min: 1 })),
-        h('div', { className: 'nt-row2' },
-          field('start', T('startLabel'), 'time'),
-          field('end', T('endLabel'), 'time')),
-        h('div', { className: 'nt-row2' },
-          field('breakStart', T('breakStartLabel'), 'time'),
-          field('breakMin', T('breakMinLabel'), 'number', { step: 5, min: 0 })),
-        h('div', { className: 'nt-row' },
-          field('workdays', T('workdaysLabel'), 'number', { step: 1, min: 0, max: 31 }),
-          h('span', { className: 'nt-hint' }, T('workdaysHint', { n: autoWorkdays(new Date()) }))),
-        h('div', { className: 'nt-err' }, errMsg),
-        h('div', { className: 'nt-actions' },
-          isSaved ? h('span', { className: 'nt-hint', style: { alignSelf: 'center', marginRight: 'auto' } }, T('saved')) : null,
-          h('button', { className: 'nt-btn primary', type: 'button', onClick: submit }, T('save')))
+        h(Sect, {
+          title: T('sectBasic'),
+          flag: props.dirty ? T('unsaved') : T('needsSave'),
+          note: T('sectBasicNote')
+        },
+          h('div', { className: 'nt-row' }, field('salary', T('salaryLabel'), 'number', { step: 100, min: 1 })),
+          h('div', { className: 'nt-row2' },
+            field('start', T('startLabel'), 'time'),
+            field('end', T('endLabel'), 'time')),
+          h('div', { className: 'nt-row2' },
+            field('breakStart', T('breakStartLabel'), 'time'),
+            field('breakMin', T('breakMinLabel'), 'number', { step: 5, min: 0 })),
+
+          // 工作日不再有独立可编辑的总数：总数由下面这份日历推导。
+          h('span', { className: 'nt-dot-title', style: { margin: '11px 0 2px' } }, T('workdaysLabel')),
+          h(MonthCalendar, {
+            T: T,
+            overrides: cfg.overrides || {},
+            now: props.now,
+            onSet: props.onSetDay
+          }),
+
+          h(Preview, {
+            T: T,
+            cfg: cfg,
+            draft: draft,
+            hideMoney: props.hideMoney,
+            now: props.now
+          }),
+
+          h('div', { className: 'nt-err' }, props.errMsg),
+          h('div', { className: 'nt-actions' },
+            props.saved ? h('span', { className: 'nt-hint', style: { alignSelf: 'center', marginRight: 'auto' } }, T('saved')) : null,
+            h('button', { className: 'nt-btn primary', type: 'button', onClick: props.onSubmit }, T('save')))
+        )
       )
     }
 
@@ -1043,6 +1328,11 @@ window.__ModuleLoader__.load({
       function fieldOn(id) { return cfg.fields[id] === true }
 
       return h('div', { className: 'nt-display' },
+        h(Sect, {
+          title: T('sectDisplay'),
+          flag: T('instantSave'),
+          note: T('sectDisplayNote')
+        }),
         h('span', { className: 'nt-dot-title', style: { margin: '0 0 6px' } }, T('mode')),
         h('div', { className: 'nt-modes' },
           modes.map(function (pair) {
@@ -1211,8 +1501,11 @@ window.__ModuleLoader__.load({
       }
 
       return h('div', { className: 'nt-display' },
-        h('span', { className: 'nt-dot-title', style: { margin: '0 0 2px' } }, T('notifyTitle')),
-        h('p', { className: 'nt-note' }, T('notifyLead')),
+        h(Sect, {
+          title: T('sectNotify'),
+          flag: T('instantSave'),
+          note: T('sectNotifyNote')
+        }),
 
         h('label', { className: 'nt-switch' },
           h('input', {
@@ -1293,6 +1586,277 @@ window.__ModuleLoader__.load({
     var PANEL_MAX_W = 560
     var LAYER_PAD = 12
     var TOP_GAP = 10
+
+    // ---------- 设置分区 ----------
+    // 三个分区共用同一套标题 + 一句说明 + 保存方式标记。分区只做组织，不新增能力：
+    // 「基础设置」影响收入与工时（要点保存），「显示偏好」「下班保护」改完立即生效。
+    function Sect(props) {
+      return h('div', { className: 'nt-sect' },
+        h('div', { className: 'nt-sect-head' },
+          h('span', { className: 'nt-sect-title' }, props.title),
+          props.flag ? h('span', { className: 'nt-sect-flag' }, props.flag) : null
+        ),
+        props.note ? h('p', { className: 'nt-sect-note' }, props.note) : null,
+        props.children
+      )
+    }
+
+    // ---------- 当月月历 ----------
+    // 唯一的日期调整入口：点一天 → 设为工作日 / 设为休息日 / 恢复默认。
+    // 覆盖表按 'YYYY-MM-DD' 存，未记录的日子一律回落到星期默认规则，所以
+    // 切到下个月再切回来时，各月的调整互不影响、也不会丢。
+    function MonthCalendar(props) {
+      var T = props.T
+      var overrides = props.overrides || {}
+      var now = props.now
+      var selState = React.useState(0)
+      var sel = selState[0]
+      var setSel = selState[1]
+
+      var y = now.getFullYear()
+      var m = now.getMonth()
+      var days = new Date(y, m + 1, 0).getDate()
+      var lead = (new Date(y, m, 1).getDay() + 6) % 7   // 周一开头
+      // 分隔符用 | ：周几里可能出现逗号，用逗号切会碎
+      var week = T('calWd').split('|')
+
+      var cells = []
+      var i
+      for (i = 0; i < 7; i++) { cells.push(h('span', { key: 'w' + i, className: 'nt-cal-wd' }, week[i])) }
+      for (i = 0; i < lead; i++) { cells.push(h('span', { key: 'b' + i })) }
+
+      for (var d = 1; d <= days; d++) {
+        var date = new Date(y, m, d)
+        var kind = getDayType(overrides, date)
+        var key = dateKey(date)
+        var custom = !!overrides[key];
+        // 用 IIFE 捕获当天序号，避免 var 提升导致所有格子都指向最后一天
+        (function (dd) {
+          cells.push(h('button', {
+            key: 'd' + dd,
+            type: 'button',
+            className: 'nt-cal-d ' + kind + (custom ? ' custom' : '') + (dd === now.getDate() ? ' today' : ''),
+            'aria-pressed': sel === dd,
+            'aria-label': dd + ' ' + T(kind === 'work' ? 'calWork' : 'calRest') + (custom ? ' · ' + T('calCustom') : ''),
+            onClick: function () { setSel(sel === dd ? 0 : dd) }
+          }, String(dd)))
+        })(d)
+      }
+
+      var selDate = sel > 0 ? new Date(y, m, sel) : null
+      var selKey = selDate ? dateKey(selDate) : ''
+      var selCustom = selDate ? !!overrides[selKey] : false
+
+      return h('div', null,
+        h('div', { className: 'nt-cal-bar' },
+          h('span', { className: 'nt-cal-sel' },
+            T('calTotal', { n: monthWorkdays(now, overrides) }) +
+            (selDate ? ' · ' + T('calPicked', {
+              d: sel,
+              kind: T(selDate && overrides[selKey] ? (overrides[selKey] === 'work' ? 'calWork' : 'calRest')
+                : ((selDate.getDay() === 0 || selDate.getDay() === 6) ? 'calRest' : 'calWork'))
+            }) : ' · ' + T('calPick')))),
+        h('div', { className: 'nt-cal' }, cells),
+        h('div', { className: 'nt-cal-bar' },
+          h('button', {
+            className: 'nt-cal-btn', type: 'button', disabled: !selDate,
+            onClick: function () { if (selDate) { props.onSet(selKey, 'work') } }
+          }, T('calSetWork')),
+          h('button', {
+            className: 'nt-cal-btn', type: 'button', disabled: !selDate,
+            onClick: function () { if (selDate) { props.onSet(selKey, 'rest') } }
+          }, T('calSetRest')),
+          h('button', {
+            className: 'nt-cal-btn', type: 'button', disabled: !selCustom,
+            onClick: function () { if (selDate) { props.onSet(selKey, null) } }
+          }, T('calReset'))),
+        h('div', { className: 'nt-cal-legend' },
+          h('span', null, h('i', { className: 'work' }), T('calWork')),
+          h('span', null, h('i', { className: 'rest' }), T('calRest')),
+          h('span', null, h('i', { className: 'custom' }), T('calCustom'))),
+        h('p', { className: 'nt-sect-note', style: { marginBottom: 0 } }, T('calNote'))
+      )
+    }
+
+    // ---------- 实时计算预览 ----------
+    // 只读草稿，不写盘。所有数字都来自 compute()——和正式仪表盘同一个函数，
+    // 所以「预览里看到的」和「保存后看到的」不可能对不上。
+    function Preview(props) {
+      var T = props.T
+      var draft = props.draft
+      var hideMoney = props.hideMoney
+      var now = props.now
+
+      var draftCfg = mergeCfg(props.cfg, {
+        salary: Number(draft.salary) || 0,
+        start: draft.start,
+        end: draft.end,
+        breakStart: draft.breakStart,
+        breakMin: Math.max(0, Number(draft.breakMin) || 0)
+      })
+      var pr = compute(draftCfg, now)
+
+      var badTimes = !validTime(draft.start) || !validTime(draft.end) ||
+        toSec(draft.end) <= toSec(draft.start)
+      var badSalary = !(Number(draft.salary) > 0)
+
+      var body
+      if (badTimes || badSalary) {
+        body = h('p', { className: 'nt-pv-warn' }, T('pvNeedValid'))
+      } else if (!(pr.totalWorkdays > 0)) {
+        body = h('p', { className: 'nt-pv-warn' }, T('pvZeroDays'))
+      } else {
+        function item(key, label, value) {
+          return h('div', { key: key, className: 'nt-pv-item' },
+            h('span', { className: 'nt-pv-k' }, label),
+            h('span', { className: 'nt-pv-v' }, value))
+        }
+        var moneyCell = function (v) { return hideMoney ? T('pvHidden') : '¥' + v }
+        body = h('div', { className: 'nt-pv-grid' },
+          item('wd', T('pvWorkdays'), String(pr.totalWorkdays)),
+          item('net', T('pvNet'), durTxt(pr.netSec, T)),
+          item('day', T('pvDayPay'), moneyCell(money(pr.dayPay))),
+          item('hour', T('pvHourPay'), moneyCell(pr.hourPay.toFixed(1))),
+          item('sec', T('pvSecPay'), moneyCell(pr.secPay.toFixed(4)))
+        )
+      }
+
+      return h('div', { className: 'nt-pv' },
+        h('div', { className: 'nt-pv-head' },
+          h('span', { className: 'nt-pv-title' }, T('pvTitle')),
+          h('span', { className: 'nt-pv-badge' }, T('pvBadge'))),
+        body
+      )
+    }
+
+    // ---------- 未保存修改确认 ----------
+    function LeaveConfirm(props) {
+      var T = props.T
+      return h('div', { className: 'nt-mask', role: 'dialog', 'aria-modal': 'true' },
+        h('div', { className: 'nt-modal' },
+          h('span', { className: 'nt-modal-title' }, T('leaveTitle')),
+          h('p', { className: 'nt-modal-lead' }, T('leaveBody')),
+          h('div', { className: 'nt-modal-foot' },
+            h('button', { className: 'nt-btn', type: 'button', onClick: props.onStay }, T('leaveStay')),
+            h('button', { className: 'nt-btn', type: 'button', onClick: props.onDiscard }, T('leaveDiscard')),
+            h('button', { className: 'nt-btn primary', type: 'button', onClick: props.onSave }, T('leaveSave'))
+          )
+        )
+      )
+    }
+
+    // ---------- 首次使用引导 ----------
+    // 只在「本地没有有效配置」且没走过引导时出现。完成写 done，稍后写 skipped；
+    // skipped 之后界面会一直带着「示例数据」标记，直到用户真的保存过一次。
+    function Onboard(props) {
+      var T = props.T
+      var cfg = props.cfg
+      var stepState = React.useState(0)
+      var step = stepState[0]
+      var setStep = stepState[1]
+      var dState = React.useState(function () {
+        return {
+          salary: String(cfg.salary),
+          start: cfg.start,
+          end: cfg.end,
+          breakStart: cfg.breakStart,
+          breakMin: String(cfg.breakMin)
+        }
+      })
+      var d = dState[0]
+      var setD = dState[1]
+      var eState = React.useState('')
+      var errMsg = eState[0]
+      var setErr = eState[1]
+
+      function patch(k, v) {
+        setD(function (prev) {
+          var next = {}
+          for (var key in prev) { next[key] = prev[key] }
+          next[k] = v
+          return next
+        })
+        setErr('')
+      }
+
+      function field(key, label, type, extra) {
+        return h('div', { className: 'nt-field' },
+          h('label', null, label),
+          h('input', {
+            type: type,
+            value: d[key],
+            step: extra && extra.step,
+            min: extra && extra.min,
+            onChange: function (e) { patch(key, e.target.value) }
+          })
+        )
+      }
+
+      function validate() {
+        if (!(Number(d.salary) > 0)) { return T('errSalary') }
+        if (!validTime(d.start) || !validTime(d.end)) { return T('errTime') }
+        if (toSec(d.end) <= toSec(d.start)) { return T('errOrder') }
+        if (toSec(d.breakStart) < toSec(d.start) || toSec(d.breakStart) > toSec(d.end)) { return T('errBreak') }
+        var net = (toSec(d.end) - toSec(d.start)) - Math.max(0, Number(d.breakMin) || 0) * 60
+        if (net <= 0) { return T('errNet') }
+        return ''
+      }
+
+      function next() {
+        var msg = validate()
+        if (msg) { setErr(msg); return }
+        if (step < 3) { setStep(step + 1); return }
+        props.onFinish({
+          salary: Number(d.salary),
+          start: d.start,
+          end: d.end,
+          breakStart: d.breakStart,
+          breakMin: Math.max(0, Number(d.breakMin) || 0)
+        })
+      }
+
+      var steps = ['obStep1', 'obStep2', 'obStep3', 'obStep4']
+      var content
+      if (step === 0) {
+        content = field('salary', T('salaryLabel'), 'number', { step: 100, min: 1 })
+      } else if (step === 1) {
+        content = h('div', { className: 'nt-row2' },
+          field('start', T('startLabel'), 'time'),
+          field('end', T('endLabel'), 'time'))
+      } else if (step === 2) {
+        content = h('div', { className: 'nt-row2' },
+          field('breakStart', T('breakStartLabel'), 'time'),
+          field('breakMin', T('breakMinLabel'), 'number', { step: 5, min: 0 }))
+      } else {
+        content = h('div', null,
+          h('div', { className: 'nt-ob-summary' },
+            h('b', null, T('obSummary', {
+              s: money(Number(d.salary) || 0),
+              a: d.start,
+              b: d.end,
+              m: Number(d.breakMin) || 0
+            }))),
+          h('p', { className: 'nt-ob-note' }, T('obCalHint')))
+      }
+
+      return h('div', { className: 'nt-mask', role: 'dialog', 'aria-modal': 'true', 'aria-label': T('obTitle') },
+        h('div', { className: 'nt-modal' },
+          h('span', { className: 'nt-modal-title' }, T('obTitle')),
+          h('p', { className: 'nt-modal-lead' }, T('obLead')),
+          h('div', { className: 'nt-ob-dots' },
+            [0, 1, 2, 3].map(function (i) {
+              return h('span', { key: i, className: 'nt-ob-dot' + (i <= step ? ' on' : '') })
+            })),
+          h('div', { className: 'nt-ob-step' }, T(steps[step])),
+          content,
+          h('div', { className: 'nt-err' }, errMsg),
+          h('div', { className: 'nt-modal-foot' },
+            step > 0 ? h('button', { className: 'nt-btn', type: 'button', onClick: function () { setStep(step - 1) } }, T('obPrev')) : null,
+            h('button', { className: 'nt-btn', type: 'button', onClick: props.onSkip }, T('obLater')),
+            h('button', { className: 'nt-btn primary', type: 'button', onClick: next }, step < 3 ? T('obNext') : T('obFinish')))
+        )
+      )
+    }
 
     function clamp(n, lo, hi) { return n < lo ? lo : (n > hi ? hi : n) }
 
@@ -1395,6 +1959,30 @@ window.__ModuleLoader__.load({
       var tickState = React.useState(function () { return Date.now() })
       var tick = tickState[0]
       var setTick = tickState[1]
+      // 草稿放在这里而不是 Settings 里面：切分区、关面板都不会丢，
+      // 「继续编辑」才能真的回到原处；「放弃修改」只要重设草稿即可。
+      var draftState = React.useState(function () { return draftOf(readCfg()) })
+      var draft = draftState[0]
+      var setDraft = draftState[1]
+      var errState = React.useState('')
+      var errMsg = errState[0]
+      var setErr = errState[1]
+      var savedState = React.useState(false)
+      var savedFlag = savedState[0]
+      var setSavedFlag = savedState[1]
+      var leaveState = React.useState(false)
+      var askLeave = leaveState[0]
+      var setAskLeave = leaveState[1]
+      var pendState = React.useState('none')
+      var pending = pendState[0]
+      var setPending = pendState[1]
+      // 首次引导只在挂载时判一次：之后保存/跳过都会把它关掉，不会反复弹。
+      var guideState = React.useState(function () {
+        var c = readCfg()
+        return c.onboard === 'none' && !hasSavedConfig()
+      })
+      var showGuide = guideState[0]
+      var setShowGuide = guideState[1]
       var chipRef = React.useRef(null)
 
       React.useEffect(function () {
@@ -1416,13 +2004,20 @@ window.__ModuleLoader__.load({
       var stampClass = 'nt-stamp' + (!tl.ordered ? ' grey' : r.status === 'break' ? ' blue' : r.status === 'off' ? ' green'
         : (r.status === 'idle' || r.status === 'rest') ? ' grey' : '')
 
+      // 金额隐藏只有一个开关：所有展示层（胶囊、面板、副标题、脚注、预览）都读它。
+      var moneyHidden = cfg.hideMoney === true
+
       var subLine
       if (!tl.ordered) { subLine = T('tlNeedTimes') }
       else if (r.status === 'rest') { subLine = T('restLine') }
       else if (r.status === 'idle') { subLine = T('idleLine', { t: cfg.start }) }
-      else if (r.status === 'overtime') { subLine = T('otLine', { a: money(r.dayPay), b: durTxt(r.overtime, T) }) }
-      else if (r.status === 'off') { subLine = T('offLine', { v: money(r.dayPay) }) }
-      else { subLine = T('workedLine', { a: durTxt(r.worked, T), b: durTxt(r.remain, T) }) }
+      else if (r.status === 'overtime') {
+        subLine = moneyHidden
+          ? T('otLineHid', { b: durTxt(r.overtime, T) })
+          : T('otLine', { a: money(r.dayPay), b: durTxt(r.overtime, T) })
+      } else if (r.status === 'off') {
+        subLine = moneyHidden ? T('offLineHid') : T('offLine', { v: money(r.dayPay) })
+      } else { subLine = T('workedLine', { a: durTxt(r.worked, T), b: durTxt(r.remain, T) }) }
 
       var capped = r.status === 'off' || r.status === 'overtime' || r.status === 'rest'
       var monthRatio = r.salary > 0 ? r.monthEarn / r.salary : 0
@@ -1475,17 +2070,113 @@ window.__ModuleLoader__.load({
         systemNotify(T('title'), hit.text)
       }, [tick, fired, r.status])
 
+      // 点阵同样只问 getDayType：改成工作日的周末会亮，改成休息日的工作日会空。
+      var ovMap = cfg.overrides || {}
       var dots = []
       var dayCount = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
       for (var d = 1; d <= dayCount; d++) {
         var date = new Date(now.getFullYear(), now.getMonth(), d)
-        if (isWeekend(date)) { continue }
-        var kind = d < now.getDate() ? 'done' : (d === now.getDate() ? 'today' : 'pending')
+        var dayType = getDayType(ovMap, date)
+        var kind = dayType === 'rest' ? 'rest'
+          : (d < now.getDate() ? 'done' : (d === now.getDate() ? 'today' : 'pending'))
         dots.push(h(Day, { key: d, kind: kind }))
       }
 
+      // ---------- 分区切换与未保存保护 ----------
+      var dirty = !sameDraft(draft, draftOf(cfg))
+      var isSample = cfg.onboard === 'skipped'
+
+      function applySection(section) {
+        setAskLeave(false)
+        setPending('none')
+        setShowForm(section === 'form')
+        setShowDisplay(section === 'display')
+        setShowNotify(section === 'notify')
+        if (section === 'close') { setOpen(false) }
+      }
+
+      // 只要草稿有未保存修改，任何「离开基础设置」的动作都先确认一次。
+      function goto(section) {
+        if (showForm && dirty && section !== 'form') {
+          setPending(section)
+          setAskLeave(true)
+          return
+        }
+        applySection(section)
+      }
+
+      function focusField(id) {
+        try {
+          var el = document.getElementById('nt-in-' + id)
+          if (el && el.focus) { el.focus() }
+        } catch (e) { /* 聚焦只是锦上添花 */ }
+      }
+
+      function saveDraft() {
+        var code = validateDraft(draft)
+        if (code) {
+          setErr(T(ERR_KEY[code]))
+          setSavedFlag(false)
+          focusField(ERR_FOCUS[code])
+          return false
+        }
+        var merged = mergeCfg(cfg, {
+          salary: Number(draft.salary),
+          start: draft.start,
+          end: draft.end,
+          breakStart: draft.breakStart,
+          breakMin: Math.max(0, Number(draft.breakMin) || 0),
+          onboard: 'done'
+        })
+        setCfg(merged)
+        writeCfg(merged)
+        setDraft(draftOf(merged))
+        setErr('')
+        setSavedFlag(true)
+        setShowGuide(false)
+        return true
+      }
+
+      function discardDraft() {
+        setDraft(draftOf(cfg))
+        setErr('')
+        setSavedFlag(false)
+      }
+
+      function onEdit() {
+        setErr('')
+        setSavedFlag(false)
+      }
+
+      // 日期覆盖即时落盘（可随时「恢复默认」），所以不进草稿、不触发未保存提示。
+      function setDayType(key, kind2) {
+        var ov = {}
+        ov[key] = kind2
+        var merged = mergeCfg(cfg, { overrides: ov })
+        setCfg(merged)
+        writeCfg(merged)
+      }
+
+      function finishGuide(values) {
+        var merged = mergeCfg(cfg, values)
+        merged.onboard = 'done'
+        setCfg(merged)
+        writeCfg(merged)
+        setDraft(draftOf(merged))
+        setShowGuide(false)
+      }
+
+      // 「稍后设置」：写 skipped，界面持续挂「示例数据」标记，直到真的保存过一次。
+      function skipGuide() {
+        var merged = mergeCfg(cfg, {})
+        merged.onboard = 'skipped'
+        setCfg(merged)
+        writeCfg(merged)
+        setShowGuide(false)
+      }
+
       function toggle() { setOpen(!open) }
-      function close() { setOpen(false) }
+      function close() { goto('close') }
 
       function onKeyDown(e) {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1497,7 +2188,6 @@ window.__ModuleLoader__.load({
       // 三种显示方案各自渲染，共用同一个 chip 外壳（点击/键盘/aria 一致）。
       var pct = Math.round(clamp(r.progress, 0, 1) * 100)
       var pctText = pct + '%'
-      var moneyHidden = cfg.hideMoney === true
       var show = cfg.fields
       var badgeClass = r.status === 'working' ? '' : (r.status === 'break' ? 'red' : 'grey')
       var remainTxt = durTxt(r.remain, T)
@@ -1575,6 +2265,9 @@ window.__ModuleLoader__.load({
         ]
       }
 
+      var chipTitle = T('title') + (moneyHidden ? ' · ' + T('moneyHidden') : '')
+      if (isSample) { chipTitle = chipTitle + ' · ' + T('sampleTip') }
+
       var chip = h('div', {
         className: 'nt-chip nt-chip--' + cfg.mode,
         ref: chipRef,
@@ -1584,23 +2277,39 @@ window.__ModuleLoader__.load({
         'aria-label': T('title') + ' ' + (moneyHidden ? pctText : ('¥' + money(r.todayEarn) + ' ' + pctText)),
         'data-hide-money': moneyHidden ? 'true' : 'false',
         'data-density': cfg.density,
-        title: T('title') + (moneyHidden ? ' · ' + T('moneyHidden') : ''),
+        title: chipTitle,
         onClick: toggle,
         onKeyDown: onKeyDown
       }, chipInner)
+
+      function secBtn(label, name, on) {
+        return h('button', {
+          className: 'nt-btn' + (on ? ' primary' : ''),
+          type: 'button',
+          'aria-pressed': on === true,
+          onClick: function () { goto(on ? 'none' : name) }
+        }, label)
+      }
 
       var body = !open ? null : h(FloatingPanel, { anchor: chipRef.current, onClose: close, label: T('title') },
         h('div', { className: 'nt-tape' }),
         h('div', { className: 'nt-body' },
           h('div', { className: 'nt-head' },
             h('span', { className: 'nt-title' }, T('title')),
+            isSample ? h('span', { className: 'nt-sample' }, T('obSampleBadge')) : null,
             h('span', { className: stampClass }, T(statusKey))
           ),
-          h('div', { className: 'nt-amount' },
-            h('span', { className: 'cur' }, '¥'),
-            h('span', { className: 'val' }, money(r.todayEarn))
-          ),
-          tl.ordered ? h('div', { className: 'nt-rate' }, capped ? T('capped') : T('perSec', { v: r.secPay.toFixed(4) })) : null,
+
+          // 金额区：隐藏时只留统一占位符，不给任何真实数字，也不在提示里复述。
+          moneyHidden
+            ? h('div', { className: 'nt-amount nt-amount-hid' }, h('span', { className: 'val' }, '•••'))
+            : h('div', { className: 'nt-amount' },
+              h('span', { className: 'cur' }, '¥'),
+              h('span', { className: 'val' }, money(r.todayEarn))),
+
+          (!moneyHidden && tl.ordered)
+            ? h('div', { className: 'nt-rate' }, capped ? T('capped') : T('perSec', { v: r.secPay.toFixed(4) }))
+            : null,
           h('div', { className: 'nt-sub' }, subLine),
 
           tl.ordered ? h('div', { className: 'nt-bar' },
@@ -1613,65 +2322,48 @@ window.__ModuleLoader__.load({
           h(Timeline, { T: T, cfg: cfg, tl: tl, rest: r.status === 'rest', status: r.status }),
           otLine,
 
-          h('div', { className: 'nt-meta' },
-            h('div', { className: 'cell' },
-              h('span', { className: 'k' }, T('dayPay')),
-              h('span', { className: 'v' }, '¥' + money(r.dayPay))),
-            h('div', { className: 'cell' },
-              h('span', { className: 'k' }, T('hourPay')),
-              h('span', { className: 'v' }, '¥' + r.hourPay.toFixed(1))),
-            h('div', { className: 'cell' },
-              h('span', { className: 'k' }, T('secPay')),
-              h('span', { className: 'v' }, '¥' + r.secPay.toFixed(4)))
-          ),
+          moneyHidden
+            ? h('p', { className: 'nt-hint', style: { margin: '2px 0 0' } }, T('moneyHiddenNote'))
+            : h('div', { className: 'nt-meta' },
+              h('div', { className: 'cell' },
+                h('span', { className: 'k' }, T('dayPay')),
+                h('span', { className: 'v' }, '¥' + money(r.dayPay))),
+              h('div', { className: 'cell' },
+                h('span', { className: 'k' }, T('hourPay')),
+                h('span', { className: 'v' }, '¥' + r.hourPay.toFixed(1))),
+              h('div', { className: 'cell' },
+                h('span', { className: 'k' }, T('secPay')),
+                h('span', { className: 'v' }, '¥' + r.secPay.toFixed(4)))
+            ),
 
           h('span', { className: 'nt-dot-title' }, T('dots')),
           h('div', { className: 'nt-dots' }, dots),
 
           h('div', { className: 'nt-foot' },
-            h('span', null, T('monthTotal') + ' ¥' + money(r.monthEarn) + ' · ' + T('monthRatio', { p: (monthRatio * 100).toFixed(1) })),
+            h('span', null, (moneyHidden ? '' : T('monthTotal') + ' ¥' + money(r.monthEarn) + ' · ') +
+              T('monthRatio', { p: (monthRatio * 100).toFixed(1) })),
             h('span', { className: 'nt-foot-actions' },
-              h('button', {
-                className: 'nt-btn' + (showDisplay && !showForm ? ' primary' : ''),
-                type: 'button',
-                onClick: function () {
-                  setShowForm(false)
-                  setShowNotify(false)
-                  setShowDisplay(!(showDisplay && !showForm))
-                }
-              }, T('displayTitle')),
-              h('button', {
-                className: 'nt-btn' + (showNotify ? ' primary' : ''),
-                type: 'button',
-                onClick: function () {
-                  setShowForm(false)
-                  setShowDisplay(false)
-                  setShowNotify(!showNotify)
-                }
-              }, T('notifyTitle')),
-              h('button', {
-                className: 'nt-btn' + (showForm ? ' primary' : ''),
-                type: 'button',
-                onClick: function () {
-                  setShowDisplay(false)
-                  setShowNotify(false)
-                  setShowForm(!showForm)
-                }
-              }, showForm ? T('close') : T('edit'))
-            )
+              secBtn(T('edit'), 'form', showForm),
+              secBtn(T('displayTitle'), 'display', showDisplay),
+              secBtn(T('notifyTitle'), 'notify', showNotify))
           ),
 
           showForm ? h(Settings, {
             cfg: cfg,
             T: T,
-            onSave: function (next) {
-              var merged = mergeCfg(cfg, next)
-              setCfg(merged)
-              writeCfg(merged)
-            }
+            now: now,
+            draft: draft,
+            setDraft: setDraft,
+            errMsg: errMsg,
+            saved: savedFlag,
+            dirty: dirty,
+            hideMoney: moneyHidden,
+            onEdit: onEdit,
+            onSubmit: saveDraft,
+            onSetDay: setDayType
           }) : null,
 
-          (showDisplay && !showForm && !showNotify) ? h(DisplaySettings, {
+          (showDisplay && !showForm) ? h(DisplaySettings, {
             cfg: cfg,
             T: T,
             onChange: function (patch) {
@@ -1682,7 +2374,7 @@ window.__ModuleLoader__.load({
             }
           }) : null,
 
-          (showNotify && !showForm && !showDisplay) ? h(NotifySettings, {
+          (showNotify && !showForm) ? h(NotifySettings, {
             cfg: cfg,
             T: T,
             onChange: function (patch) {
@@ -1699,6 +2391,25 @@ window.__ModuleLoader__.load({
         ? h(Reminder, { T: T, text: banner.text, onClose: function () { setBanner(null) } })
         : null
 
+      // 首次引导与未保存确认都是浮层，和胶囊是否隐藏无关，必须一直挂在最外层。
+      var guide = showGuide
+        ? h(Onboard, {
+          T: T,
+          cfg: cfg,
+          onFinish: finishGuide,
+          onSkip: skipGuide
+        })
+        : null
+
+      var leave = askLeave
+        ? h(LeaveConfirm, {
+          T: T,
+          onStay: function () { setAskLeave(false); setPending('none') },
+          onDiscard: function () { discardDraft(); applySection(pending) },
+          onSave: function () { if (saveDraft()) { applySection(pending) } }
+        })
+        : null
+
       // 一键隐藏：胶囊整体不渲染，只在右下角留一个极小圆点把它们叫回来。
       if (cfg.hidden) {
         return h(React.Fragment, null,
@@ -1713,11 +2424,13 @@ window.__ModuleLoader__.load({
               writeCfg(merged)
             }
           }, '🐮'),
-          reminder
+          reminder,
+          guide,
+          leave
         )
       }
 
-      return h('div', { className: 'nt-wrap', 'data-place': cfg.place }, chip, body, reminder)
+      return h('div', { className: 'nt-wrap', 'data-place': cfg.place }, chip, body, reminder, guide, leave)
     }
 
     // ---------- plugin ----------
