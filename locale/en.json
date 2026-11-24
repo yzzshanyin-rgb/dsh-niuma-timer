@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Niuma Work-Yield Timer",
-    "description": "A hand-drawn journal card under the composer: enter your monthly pay and working hours to watch today's earnings tick up. The collapsed chip is a configurable mini dashboard with three single-row layouts, per-field toggles, hide-amounts mode, position and density settings, and one-click hide. The panel adds a read-only timeline of today's hours, a per-day workday calendar for holidays and make-up days, basic settings with a live draft preview and an unsaved-changes guard, plus an opt-in end-of-day guard that is off by default. Local only; holidays are marked by hand."
+    "description": "Keep today's work time and pay visible in one glance: live timer with daily-pay conversion, a read-only today timeline, end-of-day reminders, a work calendar with one consistent workday definition, and a configurable single-line mini dashboard. Supports auto, light and dark themes, gives short feedback for important actions, guides first-time setup and lets you safely discard an edit you did not mean."
   }
 }
