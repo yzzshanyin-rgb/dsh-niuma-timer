@@ -987,8 +987,8 @@ window.__ModuleLoader__.load({
          浅色是默认值，深色由 [data-nt="dark"] 覆盖。组件规则里只引用变量，
          不再散落硬编码颜色 —— 换主题只是换一套令牌。深色色值取自 V1.5 需求表 8，
          正文对卡片底色均 >= 4.5:1（WCAG 2.1 AA），控件边界 >= 3:1。 */
-      '.nt-wrap,.nt-layer,.nt-mask,.nt-toast,.nt-reminder,.nt-dot-restore{--nt-ink:#332F2A;--nt-ink-rgb:51,47,42;--nt-ink-2:#4A443B;--nt-ink-3:#6D6558;--nt-ink-4:#8A8275;--nt-ink-4-rgb:138,130,117;--nt-ink-5:#9A9285;--nt-ink-6:#A79E91;--nt-ink-7:#5D564B;--nt-ink-8:#B3A899;--nt-paper:#FFFDF6;--nt-paper-rgb:255,253,246;--nt-paper-2:#FBF5E8;--nt-paper-2-rgb:251,245,232;--nt-paper-3:#FBF3E0;--nt-card:#FFFDF6;--nt-card-rgb:255,253,246;--nt-hover:#FFF6DF;--nt-track:#D9D2BE;--nt-sep:#C9BFAA;--nt-line:#332F2A;--nt-line-rgb:51,47,42;--nt-gold:#EABF5C;--nt-gold-rgb:234,191,92;--nt-gold-2:#F2D180;--nt-green:#7FA36B;--nt-green-rgb:127,163,107;--nt-green-2:#96B884;--nt-green-ink:#4F6B3E;--nt-green-ink-2:#6E8F5B;--nt-red:#D2605A;--nt-red-rgb:210,96,90;--nt-red-ink:#9C3F3A;--nt-blue:#4C7B8C;--nt-blue-rgb:76,123,140;--nt-blue-ink:#3E6473;--nt-orange:#C4674F;--nt-orange-rgb:196,103,79;--nt-orange-ink:#8A5A2B;--nt-brown:#7A6A3C;--nt-rule-rgb:120,170,195;--nt-shadow-rgb:51,47,42;--nt-scrim:rgba(38,34,29,.3);--nt-panel-bg:rgba(255,253,246,.84);--nt-pointer-bg:rgba(255,253,246,.9);--nt-reminder-bg:rgba(255,253,246,.96);--nt-input-bg:rgba(255,253,246,.9);--nt-focus:#2563eb}',
-      '[data-nt="dark"]{--nt-ink:#F1EADF;--nt-ink-rgb:241,234,223;--nt-ink-2:#DCD3C5;--nt-ink-3:#BDB4A7;--nt-ink-4:#A69C8D;--nt-ink-4-rgb:166,156,141;--nt-ink-5:#9A9183;--nt-ink-6:#8E8678;--nt-ink-7:#C9C0B1;--nt-ink-8:#9A9384;--nt-paper:#242321;--nt-paper-rgb:36,35,33;--nt-paper-2:#2C2A26;--nt-paper-2-rgb:44,42,38;--nt-paper-3:#2F2C27;--nt-card:#393630;--nt-card-rgb:57,54,48;--nt-hover:#393630;--nt-track:#4A453C;--nt-sep:#5F584D;--nt-line:#7A7164;--nt-line-rgb:122,113,100;--nt-gold:#D6AD70;--nt-gold-rgb:214,173,112;--nt-gold-2:#E2C089;--nt-green:#7FA36B;--nt-green-rgb:127,163,107;--nt-green-2:#9CBF86;--nt-green-ink:#AFCB97;--nt-green-ink-2:#9DBD86;--nt-red:#E0776F;--nt-red-rgb:224,119,111;--nt-red-ink:#F0A29A;--nt-blue:#7FB3C6;--nt-blue-rgb:127,179,198;--nt-blue-ink:#93C7D8;--nt-orange:#DB8268;--nt-orange-rgb:219,130,104;--nt-orange-ink:#DDA57C;--nt-brown:#C9B878;--nt-rule-rgb:150,160,170;--nt-shadow-rgb:0,0,0;--nt-scrim:rgba(8,8,7,.62);--nt-panel-bg:rgba(36,35,33,.92);--nt-pointer-bg:rgba(36,35,33,.94);--nt-reminder-bg:rgba(44,42,38,.97);--nt-input-bg:rgba(48,46,42,.9);--nt-focus:#7FB3C6}',
+      '.nt-wrap,.nt-layer,.nt-mask,.nt-toast,.nt-reminder,.nt-dot-restore{--nt-anchor:92px;color-scheme:light;--nt-ink:#332F2A;--nt-ink-rgb:51,47,42;--nt-ink-2:#4A443B;--nt-ink-3:#6D6558;--nt-ink-4:#8A8275;--nt-ink-4-rgb:138,130,117;--nt-ink-5:#9A9285;--nt-ink-6:#A79E91;--nt-ink-7:#5D564B;--nt-ink-8:#B3A899;--nt-paper:#FFFDF6;--nt-paper-rgb:255,253,246;--nt-paper-2:#FBF5E8;--nt-paper-2-rgb:251,245,232;--nt-paper-3:#FBF3E0;--nt-card:#FFFDF6;--nt-card-rgb:255,253,246;--nt-hover:#FFF6DF;--nt-track:#D9D2BE;--nt-sep:#C9BFAA;--nt-line:#332F2A;--nt-line-rgb:51,47,42;--nt-gold:#EABF5C;--nt-gold-rgb:234,191,92;--nt-gold-2:#F2D180;--nt-green:#7FA36B;--nt-green-rgb:127,163,107;--nt-green-2:#96B884;--nt-green-ink:#4F6B3E;--nt-green-ink-2:#6E8F5B;--nt-red:#D2605A;--nt-red-rgb:210,96,90;--nt-red-ink:#9C3F3A;--nt-blue:#4C7B8C;--nt-blue-rgb:76,123,140;--nt-blue-ink:#3E6473;--nt-orange:#C4674F;--nt-orange-rgb:196,103,79;--nt-orange-ink:#8A5A2B;--nt-brown:#7A6A3C;--nt-rule-rgb:120,170,195;--nt-shadow-rgb:51,47,42;--nt-scrim:rgba(38,34,29,.3);--nt-panel-bg:rgba(255,253,246,.84);--nt-pointer-bg:rgba(255,253,246,.9);--nt-reminder-bg:rgba(255,253,246,.96);--nt-input-bg:rgba(255,253,246,.9);--nt-focus:#2563eb}',
+      '[data-nt="dark"]{color-scheme:dark;--nt-ink:#F1EADF;--nt-ink-rgb:241,234,223;--nt-ink-2:#DCD3C5;--nt-ink-3:#BDB4A7;--nt-ink-4:#A69C8D;--nt-ink-4-rgb:166,156,141;--nt-ink-5:#9A9183;--nt-ink-6:#8E8678;--nt-ink-7:#C9C0B1;--nt-ink-8:#9A9384;--nt-paper:#242321;--nt-paper-rgb:36,35,33;--nt-paper-2:#2C2A26;--nt-paper-2-rgb:44,42,38;--nt-paper-3:#2F2C27;--nt-card:#393630;--nt-card-rgb:57,54,48;--nt-hover:#393630;--nt-track:#4A453C;--nt-sep:#5F584D;--nt-line:#7A7164;--nt-line-rgb:122,113,100;--nt-gold:#D6AD70;--nt-gold-rgb:214,173,112;--nt-gold-2:#E2C089;--nt-green:#7FA36B;--nt-green-rgb:127,163,107;--nt-green-2:#9CBF86;--nt-green-ink:#AFCB97;--nt-green-ink-2:#9DBD86;--nt-red:#E0776F;--nt-red-rgb:224,119,111;--nt-red-ink:#F0A29A;--nt-blue:#7FB3C6;--nt-blue-rgb:127,179,198;--nt-blue-ink:#93C7D8;--nt-orange:#DB8268;--nt-orange-rgb:219,130,104;--nt-orange-ink:#DDA57C;--nt-brown:#C9B878;--nt-rule-rgb:150,160,170;--nt-shadow-rgb:0,0,0;--nt-scrim:rgba(8,8,7,.62);--nt-panel-bg:rgba(36,35,33,.92);--nt-pointer-bg:rgba(36,35,33,.94);--nt-reminder-bg:rgba(44,42,38,.97);--nt-input-bg:rgba(48,46,42,.9);--nt-focus:#7FB3C6}',
       /* 深色里硬投影几乎看不见，换成柔和环境阴影保住层次 */
       '[data-nt="dark"] .nt-chip,[data-nt="dark"] .nt-btn,[data-nt="dark"] .nt-modal,[data-nt="dark"] .nt-panel,[data-nt="dark"] .nt-reminder,[data-nt="dark"] .nt-toast{box-shadow:0 8px 22px -10px rgba(0,0,0,.8)}',
       /* 焦点环走令牌：浅色蓝、深色浅青，两者对各自底色都过 3:1 */
@@ -1180,7 +1180,7 @@ window.__ModuleLoader__.load({
       '.nt-note{margin:2px 0 8px;font-size:10.5px;line-height:1.55;color:var(--nt-ink-5)}',
 
       /* 提醒条：浮在胶囊上方，自带关闭按钮；三层 z-index 低于宿主自己的 dialog */
-      '.nt-reminder{position:fixed;right:16px;bottom:92px;z-index:32;display:flex;align-items:center;gap:8px;max-width:320px;padding:7px 9px 8px 11px;font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif;font-size:12.5px;line-height:1.45;color:var(--nt-ink);background-color:var(--nt-reminder-bg);background-image:repeating-linear-gradient(to bottom,transparent 0 14px,rgba(var(--nt-rule-rgb),.16) 14px 15px);border:1.6px solid var(--nt-line);border-radius:12px 15px 11px 16px/14px 11px 16px 12px;box-shadow:3px 4px 0 rgba(var(--nt-shadow-rgb),.14),0 14px 30px -14px rgba(var(--nt-shadow-rgb),.4);animation:nt-rem .18s ease-out}',
+      '.nt-reminder{position:fixed;right:16px;bottom:calc(var(--nt-anchor) + env(safe-area-inset-bottom,0px));z-index:32;display:flex;align-items:center;gap:8px;max-width:320px;padding:7px 9px 8px 11px;font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif;font-size:12.5px;line-height:1.45;color:var(--nt-ink);background-color:var(--nt-reminder-bg);background-image:repeating-linear-gradient(to bottom,transparent 0 14px,rgba(var(--nt-rule-rgb),.16) 14px 15px);border:1.6px solid var(--nt-line);border-radius:12px 15px 11px 16px/14px 11px 16px 12px;box-shadow:3px 4px 0 rgba(var(--nt-shadow-rgb),.14),0 14px 30px -14px rgba(var(--nt-shadow-rgb),.4);animation:nt-rem .18s ease-out}',
       '@keyframes nt-rem{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
       '.nt-reminder-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--nt-red)}',
       '.nt-reminder-text{flex:1 1 auto;min-width:0}',
@@ -1200,6 +1200,15 @@ window.__ModuleLoader__.load({
       '.nt-field label{font-size:11px;color:var(--nt-ink-3);letter-spacing:1.1px}',
       '.nt-field input{width:100%;font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;color:var(--nt-ink);background:var(--nt-input-bg);border:1.4px solid rgba(var(--nt-line-rgb),.5);border-radius:7px 9px 7px 10px/9px 7px 10px 7px;padding:4px 8px;outline:none}',
       '.nt-field input:focus{border-color:var(--nt-blue);box-shadow:0 0 0 2.5px rgba(var(--nt-blue-rgb),.14)}',
+      /* 原生控件的小图标（时间选择器、数字步进）由浏览器按 color-scheme 自己绘制：
+         容器声明 dark 后它们就已经是浅色，不需要也不要再叠 filter ——
+         实测 invert(1) 会把浅色箭头反转成「白底黑箭头」的方块。
+         这里只调透明度让图标不抢戏，不改变颜色本身。 */
+      '.nt-field input::-webkit-calendar-picker-indicator{filter:none;opacity:.6;cursor:pointer}',
+      '.nt-field input:hover::-webkit-calendar-picker-indicator{opacity:.9}',
+      '.nt-field input::-webkit-inner-spin-button{filter:none;opacity:.6}',
+      /* 勾选框与单选：accent-color 已跟随令牌，这里只保证禁用态可辨。 */
+      '.nt-check input:disabled,.nt-switch input:disabled,.nt-cal-btn[disabled]{cursor:not-allowed}',
       '.nt-row{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px}',
       '.nt-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}',
       '.nt-hint{font-size:10.5px;color:var(--nt-ink-5)}',
@@ -1269,12 +1278,15 @@ window.__ModuleLoader__.load({
       /* ---- 轻提示 Toast ---- */
       /* 固定视口底部居中并 portal 到 body：胶囊隐藏、面板关闭时也照常可见。
          pointer-events:none 保证它永远不挡住输入框与主按钮。 */
-      '.nt-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:2147483001;display:flex;align-items:center;gap:7px;max-width:min(92vw,420px);padding:8px 13px 9px;border-radius:9px;background:var(--nt-paper);color:var(--nt-ink);border:1.5px solid var(--nt-line);box-shadow:4px 4px 0 rgba(var(--nt-shadow-rgb),.16),0 16px 32px -18px rgba(var(--nt-shadow-rgb),.5);font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif;font-size:12.5px;line-height:1.45;pointer-events:none;animation:nt-toast-in .16s ease-out}',
+      /* bottom 由两段变量相加：基础锚点 + 避让位移，两者都叠加 safe-area，
+         保证在带手势条的设备上不贴住系统区域。 */
+      '.nt-toast{position:fixed;left:50%;bottom:calc(var(--nt-anchor) + var(--nt-toast-extra,0px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483001;display:flex;align-items:center;gap:7px;max-width:min(92vw,420px);padding:8px 13px 9px;border-radius:9px;background:var(--nt-paper);color:var(--nt-ink);border:1.5px solid var(--nt-line);box-shadow:4px 4px 0 rgba(var(--nt-shadow-rgb),.16),0 16px 32px -18px rgba(var(--nt-shadow-rgb),.5);font-family:"NT WenKai","Kaiti SC","Songti SC",system-ui,sans-serif;font-size:12.5px;line-height:1.45;pointer-events:none;animation:nt-toast-in .16s ease-out}',
       '.nt-toast-text{min-width:0;overflow-wrap:break-word}',
       '.nt-toast-dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:var(--nt-green)}',
+      '.nt-toast{transition:bottom .18s ease}',
       '.nt-toast.err{border-color:var(--nt-red)}',
       '.nt-toast.err .nt-toast-dot{background:var(--nt-red)}',
-      '@keyframes nt-toast-in{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}',
+      '@keyframes nt-toast-in{from{opacity:0}to{opacity:1}}',
 
       /* 窄屏：浮层铺满可用宽度，跟着视口走，不再对齐胶囊 */
       '@media (max-width:620px){.nt-panel{left:12px;right:12px;width:auto;max-width:none}.nt-layer{padding:12px}.nt-pointer{display:none}}',
@@ -1296,8 +1308,8 @@ window.__ModuleLoader__.load({
       '@media (max-width:440px){.nt-tl-lbl i{display:none}.nt-tl-lbl b{font-size:11px}.nt-tl-prog{font-size:10.5px}}',
       '@media (max-width:300px){.nt-tl-prog>span:first-child{white-space:normal}.nt-tl-known{gap:8px}}',
       '@media (max-width:420px){.nt-pv-grid{grid-template-columns:1fr}.nt-cal{gap:2px}.nt-cal-d{font-size:10px;padding:4px 0 5px}}',
-      '@media (max-width:480px){.nt-toast{bottom:86px;max-width:min(94vw,340px);font-size:12px}}',
-      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}.nt-cal-d{transition:none}.nt-toast{animation:none}}'
+      '@media (max-width:480px){.nt-toast{max-width:min(94vw,340px);font-size:12px}}',
+      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}.nt-cal-d{transition:none}.nt-toast{animation:none;transition:none}}'
     ].join('\n')
     // ---------- components ----------
     function Day(props) {
@@ -1645,9 +1657,19 @@ window.__ModuleLoader__.load({
     // 成功与即时变更的统一反馈：2.4 秒自动消失，不阻塞、不抢焦点、同文案不堆叠。
     // portal 到 body，所以胶囊被隐藏时也看得见（「胶囊已隐藏」必须说给用户听）。
     function Toast(props) {
+      var ref = React.useRef(null)
+      // REQ-02：提醒条可见时把 Toast 抬到它上方。位移由父组件算，
+      // 这里只把「量到的自身高度」回报上去，避免两处各猜一个数字。
+      React.useLayoutEffect(function () {
+        var el = ref.current
+        if (el && props.onMeasure) { props.onMeasure(el.offsetHeight || 0) }
+      })
       var node = h('div', {
+        ref: ref,
         className: 'nt-toast' + (props.kind === 'err' ? ' err' : ''),
         'data-nt': props.nt,
+        'data-raised': props.raised === true ? 'true' : 'false',
+        style: props.extraBottom ? { '--nt-toast-extra': props.extraBottom + 'px' } : undefined,
         role: props.kind === 'err' ? 'alert' : 'status',
         'aria-live': props.kind === 'err' ? 'assertive' : 'polite',
         'aria-atomic': 'true'
@@ -1663,7 +1685,12 @@ window.__ModuleLoader__.load({
     // 内嵌提示是主路径：不申请任何权限，也不会因为权限被拒而消失。
     // 若浏览器**已经**授予通知权限，则额外发一条系统通知（本插件从不主动申请）。
     function Reminder(props) {
-      var node = h('div', { className: 'nt-reminder', 'data-nt': props.nt, role: 'status', 'aria-live': 'polite' },
+      var ref = React.useRef(null)
+      React.useLayoutEffect(function () {
+        var el = ref.current
+        if (el && props.onMeasure) { props.onMeasure(el.offsetHeight || 0) }
+      })
+      var node = h('div', { ref: ref, className: 'nt-reminder', 'data-nt': props.nt, role: 'status', 'aria-live': 'polite' },
         h('span', { className: 'nt-reminder-dot' }),
         h('span', { className: 'nt-reminder-text' }, props.text),
         h('button', {
@@ -2109,6 +2136,10 @@ window.__ModuleLoader__.load({
       var setToast = toastState[1]
       var toastTimer = React.useRef(null)
       var toastSeq = React.useRef(0)
+      // REQ-02：提醒条可见时，Toast 抬到提醒上方；高度用实测值，不写死。
+      var remHState = React.useState(0)
+      var reminderH = remHState[0]
+      var setReminderH = remHState[1]
 
       function showToast(text, kind) {
         if (!text) { return }
@@ -2358,24 +2389,33 @@ window.__ModuleLoader__.load({
         if (hit) { showToast(T(n[hit] === true ? 'fbNotifyOn' : 'fbNotifyOff')) }
       }
 
+      // REQ-01：正式配置与引导完成标记都以「写盘成功」为提交前提。
+      // 失败时不动 cfg、不关引导、草稿原样保留，用户可直接重试。
       function finishGuide(values) {
         var merged = mergeCfg(cfg, values)
         merged.onboard = 'done'
-        var okw = writeCfg(merged)
+        if (!writeCfg(merged)) {
+          showToast(T('errSave'), 'err')
+          return false
+        }
         setCfg(merged)
         setDraft(draftOf(merged))
         setShowGuide(false)
-        if (!okw) { showToast(T('errSave'), 'err') }
+        return true
       }
 
       // 「稍后设置」：写 skipped，界面持续挂「示例数据」标记，直到真的保存过一次。
+      // 「稍后设置」同理：写不进去就不能记成已跳过，引导保持打开。
       function skipGuide() {
         var merged = mergeCfg(cfg, {})
         merged.onboard = 'skipped'
-        var okw = writeCfg(merged)
+        if (!writeCfg(merged)) {
+          showToast(T('errSave'), 'err')
+          return false
+        }
         setCfg(merged)
         setShowGuide(false)
-        if (!okw) { showToast(T('errSave'), 'err') }
+        return true
       }
 
       function toggle() { setOpen(!open) }
@@ -2582,10 +2622,28 @@ window.__ModuleLoader__.load({
 
       // 提醒条：独立浮层，胶囊隐藏时也照常出现（否则「下班保护」会被胶囊一起关掉）。
       var reminder = banner
-        ? h(Reminder, { T: T, text: banner.text, nt: nt, onClose: function () { setBanner(null) } })
+        ? h(Reminder, {
+          T: T,
+          text: banner.text,
+          nt: nt,
+          onMeasure: setReminderH,
+          onClose: function () { setBanner(null); setReminderH(0) }
+        })
         : null
 
-      var toastNode = toast ? h(Toast, { text: toast.text, kind: toast.kind, nt: nt }) : null
+      // 避让：提醒可见时 Toast 抬到「提醒高度 + 间距」之上；提醒消失后自动回原位。
+      var GAP = 12
+      var raised = !!banner
+      var toastExtra = raised ? reminderH + GAP : 0
+      var toastNode = toast
+        ? h(Toast, {
+          text: toast.text,
+          kind: toast.kind,
+          nt: nt,
+          raised: raised,
+          extraBottom: toastExtra
+        })
+        : null
 
       // 首次引导与未保存确认都是浮层，和胶囊是否隐藏无关，必须一直挂在最外层。
       var guide = showGuide
