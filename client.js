@@ -26,6 +26,7 @@ window.__ModuleLoader__.load({
 
     // ---------- constants ----------
     var STORE_KEY = 'dsh-niuma-timer.v1'
+    var OVERTIME_KEY = 'dsh-niuma-timer.overtime.v1'
     var DEFAULTS = {
       salary: 12000,
       start: '09:00',
@@ -59,7 +60,7 @@ window.__ModuleLoader__.load({
         preEnd: false,     // 计划下班前提醒一次
         lead: 10,          // 提前几分钟：5 | 10 | 15 | 30
         atEnd: false,      // 到点提醒一次
-        overtime: false    // 面板/胶囊里显示「已超过计划下班时间 N 分钟」
+        overtime: false    // 面板显示距计划下班已过去多久
       }
     }
 
@@ -93,33 +94,41 @@ window.__ModuleLoader__.load({
 
     var STR = {
       zh: {
-        chipLabel: '牛马费',
+        otClearFailed: "加班已在当前会话停止，但浏览器未能清除保存的状态。",
+        estimateNote: "按当前月薪和计划工作日、工时折算，非实际到账工资。",
+        recalcNote: "更改配置会重新计算当月预估值，过去日期不会保留旧估值。",
+        otStart: "我还在工作 · 开启加班计时",
+        otStop: "结束加班",
+        otConfirmed: "已确认持续 {n} 分钟",
+        otStarted: "加班计时已开启",
+        otStopped: "加班计时已结束",
+        otSession: "加班计时仅在当前会话生效。",
+        obScheduleSummary: "上下班 {a}–{b} · 午休 {m} 分钟",
+        chipLabel: "今日预估",
         chipToday: '今日 {p}%',
-        chipMonth: '本月 ¥{v}',
-        title: '今日牛马费',
+        chipMonth: "本月预估累计 {v}",
+        title: "今日预估已赚",
         stWorking: '打工中',
         stBreak: '午休中',
-        stOff: '已下班',
-        stOvertime: '无偿加班',
-        stIdle: '未开工',
+        stOff: "已到计划下班时间",
+        stOvertime: "加班计时中",
+        stIdle: "尚未上班",
         stRest: '休息日',
-        perSec: '每秒 +{v} 元',
-        capped: '今日计费已封顶',
+        perSec: "每秒预估 +{v} 元",
+        capped: "今日预估已封顶",
         workedLine: '已上 {a} · 还剩 {b}',
         idleLine: '还没开工 · {t} 开始计费',
         restLine: '今天休息，牛马费暂停累计',
-        offLine: '今日满额 ¥{v} · 快走，别回头',
-        otLine: '今日满额 ¥{a} · 白干 {b}',
         progress: '完成 {p}%',
         remain: '距下班 {t}',
-        finished: '今日已收工',
-        dayPay: '日薪',
-        hourPay: '时薪',
-        secPay: '秒薪',
-        monthTotal: '本月累计',
+        finished: "计划工时已完成",
+        dayPay: "预估日薪",
+        hourPay: "预估时薪",
+        secPay: "预估秒薪",
+        monthTotal: "本月预估累计",
         monthDone: '已完成 {n}/{m} 个工作日',
         monthLeft: '还剩 {n} 个工作日',
-        monthRatio: '本月已挣 {p}% 月薪',
+        monthRatio: "本月预估为月薪的 {p}%",
         dots: '工作日打卡',
         setup: '记一下我的情况',
         edit: '基础设置',
@@ -138,6 +147,7 @@ window.__ModuleLoader__.load({
         errOrder: '下班时间要晚于上班时间',
         errBreak: '午休开始要在上下班之间',
         errNet: '扣掉午休后没有工作时间了',
+        errBreakMin: '午休时长须为非负分钟数',
         errDays: '应出勤天数填 0–31',
         unitH: '小时',
         unitM: '分',
@@ -151,15 +161,11 @@ window.__ModuleLoader__.load({
         modeMiniHint: '一行数字 + 进度',
         modeFullHint: '金额、进度条、本月与状态',
         modeFunHint: '大金额 + 状态章 + 文案',
-        miniToday: '今日已赚',
+        miniToday: "今日预估",
         miniProgress: '今日进度',
-        funLabel: '今日打工收益',
-        funTicking: '每秒收入持续增加中…',
-        funFrozen: '今日收益已封顶',
+        funLabel: "今日预估",
         funToday: '今日打工收益',
         remainBadge: '距离解放还有 {t}',
-        remainBadgeDone: '已经解放啦',
-        remainBadgeOt: '白干 {t}',
         themeLabel: '外观主题',
         themeAuto: '跟随系统',
         themeLight: '浅色',
@@ -235,11 +241,11 @@ window.__ModuleLoader__.load({
         pvBadge: '预估 · 未保存',
         pvWorkdays: '当月工作日',
         pvNet: '每日净工时',
-        pvDayPay: '预计日薪',
-        pvHourPay: '预计时薪',
-        pvSecPay: '预计秒薪',
-        pvNeedValid: '把必填项填对之后才会给出预览。',
-        pvZeroDays: '当月工作日为 0，日薪无法计算 —— 请至少留一个工作日。',
+        pvDayPay: "预估日薪",
+        pvHourPay: "预估时薪",
+        pvSecPay: "预估秒薪",
+        pvNeedValid: "请完善薪资与排班设置。",
+        pvZeroDays: "当前月份无工作日，无法估算收入。",
         pvHidden: '金额已隐藏',
 
         obTitle: '先把你的情况填一下',
@@ -258,8 +264,7 @@ window.__ModuleLoader__.load({
         obSampleNote: '还没填自己的数据，这里显示的是示例配置。',
         sampleTip: '示例数据 · 去「基础设置」填你真实的月薪',
         moneyHiddenNote: '金额已隐藏（可在「显示偏好」里恢复）',
-        otLineHid: '今日计费已封顶 · 白干 {b}',
-        offLineHid: '今日计费已封顶 · 快走，别回头',
+        offLineHid: "今日计划工时已完成",
         dotWork: '工作日',
         dotRest: '休息日',
 
@@ -269,7 +274,7 @@ window.__ModuleLoader__.load({
         tlEnd: '下班',
         tlBreak: '午休',
         tlBefore: '尚未上班',
-        tlAfter: '已到计划下班时间',
+        tlAfter: "已到计划下班时间",
         tlNoSchedule: '时间还没配全',
         tlNeedTimes: '在「改数据」里填上上下班时间，这里才会画出今天的时间轴。',
         tlProgress: '已工作 {a} / 计划 {b}',
@@ -284,43 +289,50 @@ window.__ModuleLoader__.load({
         lead15: '15 分',
         lead30: '30 分',
         atEndLabel: '到点提醒',
-        overtimeLabel: '下班后超时状态',
-        overtimeHint: '在面板里显示「已超过计划下班时间 X 分钟」，随时间更新，不弹窗',
+        overtimeLabel: "计划时间超时显示",
+        overtimeHint: "显示当前时间与计划下班时间的差值，仅供参考。",
         notifyNote: '三项默认关闭、可单独开关；同一提醒每天最多一次。不记录你的实际下班时间，也不算加班收入。',
-        otJustNow: '已超过计划下班时间不到 1 分钟',
-        otOvertime: '已超过计划下班时间 {n} 分钟',
-        otBadge: '超时 {n} 分',
+        otJustNow: "距计划下班时间已过去不到 1 分钟",
+        otOvertime: "距计划下班时间已过去 {n} 分钟",
         remPreEnd: '还有 {t} 就到计划下班时间',
         remAtEnd: '到计划下班时间了（{t}）'
       },
       en: {
-        chipLabel: 'Work-yield',
+        otClearFailed: "Stopped in this session. The browser could not clear the saved timer.",
+        estimateNote: "Estimates use current monthly pay, planned workdays and hours. They do not represent actual payments.",
+        recalcNote: "Changes recalculate this month’s estimates, including past dates.",
+        otStart: "Still working · Start overtime timer",
+        otStop: "Stop overtime timer",
+        otConfirmed: "Confirmed for {n} min",
+        otStarted: "Overtime timer started",
+        otStopped: "Overtime timer stopped",
+        otSession: "Overtime timer is available for this session only.",
+        obScheduleSummary: "Schedule {a}–{b} · {m} min break",
+        chipLabel: "Est. today",
         chipToday: 'today {p}%',
-        chipMonth: 'month ¥{v}',
-        title: "Today's earnings",
+        chipMonth: "Est. this month {v}",
+        title: "Estimated earnings today",
         stWorking: 'on the clock',
         stBreak: 'lunch break',
-        stOff: 'clocked out',
-        stOvertime: 'unpaid overtime',
-        stIdle: 'not started',
+        stOff: "Past planned end",
+        stOvertime: "Overtime timer active",
+        stIdle: "Before work",
         stRest: 'day off',
-        perSec: '+{v} / sec',
-        capped: 'capped for today',
+        perSec: "Est. +¥{v}/s",
+        capped: "Today’s estimate is capped",
         workedLine: '{a} in · {b} left',
         idleLine: 'Not started · billing begins at {t}',
         restLine: 'Day off — nothing is accruing',
-        offLine: 'Full day ¥{v} · go home',
-        otLine: 'Full day ¥{a} · {b} unpaid',
         progress: '{p}% done',
         remain: '{t} to go',
-        finished: 'Done for today',
-        dayPay: 'day',
-        hourPay: 'hour',
-        secPay: 'sec',
-        monthTotal: 'This month',
+        finished: "Planned hours complete",
+        dayPay: "Est. day pay",
+        hourPay: "Est. hourly pay",
+        secPay: "Est. pay per second",
+        monthTotal: "Estimated month total",
         monthDone: '{n}/{m} workdays done',
         monthLeft: '{n} workdays left',
-        monthRatio: '{p}% of salary earned',
+        monthRatio: "Estimated {p}% of monthly pay",
         dots: 'Workday check-in',
         setup: 'My settings',
         edit: 'Edit',
@@ -339,6 +351,7 @@ window.__ModuleLoader__.load({
         errOrder: 'End time must be after start time',
         errBreak: 'Break must start between start and end',
         errNet: 'No working time left after the break',
+        errBreakMin: 'Break duration must be a non-negative number of minutes',
         errDays: 'Workdays must be 0–31',
         unitH: 'h',
         unitM: 'm',
@@ -352,15 +365,11 @@ window.__ModuleLoader__.load({
         modeMiniHint: 'one figure plus progress',
         modeFullHint: 'amount, bar, month and status',
         modeFunHint: 'big amount, badge, caption',
-        miniToday: 'Earned today',
+        miniToday: "Est. today",
         miniProgress: 'progress',
-        funLabel: "Today's work yield",
-        funTicking: 'Still ticking up…',
-        funFrozen: "Capped for today",
+        funLabel: "Est. today",
         funToday: "Today's work yield",
         remainBadge: '{t} until freedom',
-        remainBadgeDone: 'Already free',
-        remainBadgeOt: '{t} unpaid',
         themeLabel: 'Theme',
         themeAuto: 'System',
         themeLight: 'Light',
@@ -436,11 +445,11 @@ window.__ModuleLoader__.load({
         pvBadge: 'estimated · unsaved',
         pvWorkdays: 'Workdays',
         pvNet: 'Net hours',
-        pvDayPay: 'Day pay',
-        pvHourPay: 'Hourly',
-        pvSecPay: 'Per second',
-        pvNeedValid: 'Fill in the required fields to see a preview.',
-        pvZeroDays: 'Zero workdays this month — day pay cannot be computed. Keep at least one workday.',
+        pvDayPay: "Est. day pay",
+        pvHourPay: "Est. hourly pay",
+        pvSecPay: "Est. per second",
+        pvNeedValid: "Complete your pay and schedule settings.",
+        pvZeroDays: "No workdays this month. Earnings cannot be estimated.",
         pvHidden: 'Amounts hidden',
 
         obTitle: 'Set up your own numbers first',
@@ -459,8 +468,7 @@ window.__ModuleLoader__.load({
         obSampleNote: "You haven't entered your own numbers yet — these are sample defaults.",
         sampleTip: 'Sample data · open Basic to enter your real salary',
         moneyHiddenNote: 'Amounts hidden (restore them under Display)',
-        otLineHid: 'Capped for today · {b} unpaid',
-        offLineHid: 'Capped for today · go home already',
+        offLineHid: "Today’s planned hours are complete",
         dotWork: 'Workday',
         dotRest: 'Rest day',
 
@@ -470,7 +478,7 @@ window.__ModuleLoader__.load({
         tlEnd: 'End',
         tlBreak: 'Break',
         tlBefore: 'Not started yet',
-        tlAfter: 'Past the planned end time',
+        tlAfter: "Past planned end",
         tlNoSchedule: 'Times incomplete',
         tlNeedTimes: "Fill in your start and end times under Edit to draw today's timeline.",
         tlProgress: '{a} worked / {b} planned',
@@ -485,12 +493,11 @@ window.__ModuleLoader__.load({
         lead15: '15m',
         lead30: '30m',
         atEndLabel: 'Remind at the end time',
-        overtimeLabel: 'Show overtime status',
-        overtimeHint: 'Shows how long you are past the planned end time in the panel; updates live, no popups',
+        overtimeLabel: "Show time past planned end",
+        overtimeHint: "Shows the time elapsed since the planned end, for reference.",
         notifyNote: 'All three are off by default and toggle independently; each reminder fires at most once a day. Your actual clock-out time is never recorded, and overtime never counts as earnings.',
-        otJustNow: 'Past the planned end time by less than a minute',
-        otOvertime: 'Past the planned end time by {n} min',
-        otBadge: '{n}m over',
+        otJustNow: "Less than 1 min past planned end",
+        otOvertime: "{n} min past planned end",
         remPreEnd: '{t} until your planned end time',
         remAtEnd: 'Planned end time reached ({t})'
       }
@@ -528,6 +535,11 @@ window.__ModuleLoader__.load({
         var raw = localStorage.getItem(STORE_KEY)
         if (raw) {
           var saved = JSON.parse(raw)
+          if (!saved || typeof saved !== 'object' || Array.isArray(saved)) { return out }
+          // Required fields missing from a saved configuration need user input.
+          out.salary = saved.salary == null ? '' : saved.salary
+          out.start = saved.start == null ? '' : saved.start
+          out.end = saved.end == null ? '' : saved.end
           for (var key in out) {
             if (out[key] && typeof out[key] === 'object') { continue }
             if (saved[key] !== undefined && saved[key] !== null && saved[key] !== '') { out[key] = saved[key] }
@@ -706,7 +718,7 @@ window.__ModuleLoader__.load({
     }
 
     function money(n) {
-      if (!isFinite(n)) { n = 0 }
+      if (!Number.isFinite(n)) { return '—' }
       var s = n.toFixed(2)
       var parts = s.split('.')
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -714,6 +726,11 @@ window.__ModuleLoader__.load({
     }
 
     /** 默认规则：周一至周五上班，周六周日休息。只在没有用户覆盖时使用。 */
+    function currency(n, digits) {
+      if (!Number.isFinite(n)) { return '—' }
+      return '¥' + (digits === undefined ? money(n) : n.toFixed(digits))
+    }
+
     function isWeekend(d) {
       var w = d.getDay()
       return w === 0 || w === 6
@@ -764,7 +781,7 @@ window.__ModuleLoader__.load({
     // 所有节点都从现有设置推导：没有午休配置就不画午休区间；上下班缺一个就没有
     // 可用量程——此时不画刻度、不给百分比、不给倒计时，只把已知节点列出来。
     function validTime(v) {
-      return typeof v === 'string' && /^\d{1,2}:\d{2}$/.test(v.trim())
+      return typeof v === 'string' && /^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(v.trim())
     }
 
     function hmTxt(sec) {
@@ -779,20 +796,23 @@ window.__ModuleLoader__.load({
       var endSec = hasEnd ? toSec(cfg.end) : null
       var ordered = hasStart && hasEnd && endSec > startSec
 
-      var bmSec = Math.max(0, Number(cfg.breakMin) || 0) * 60
-      var hasBreak = false
-      var bsSec = null
-      var beSec = null
-      if (ordered && validTime(cfg.breakStart) && bmSec > 0) {
-        var b = toSec(cfg.breakStart)
-        if (b >= startSec && b < endSec) {
-          hasBreak = true
-          bsSec = b
-          beSec = Math.min(b + bmSec, endSec)
-        }
+      var breakMin = Number(cfg.breakMin)
+      var breakStart = validTime(cfg.breakStart) ? toSec(cfg.breakStart) : null
+      var validBreakMin = (typeof cfg.breakMin === 'number' || typeof cfg.breakMin === 'string') &&
+        Number.isFinite(breakMin) && breakMin >= 0
+      var scheduleIssue = ''
+      if (!hasStart || !hasEnd) { scheduleIssue = 'time' }
+      else if (!ordered) { scheduleIssue = 'order' }
+      else if (!validBreakMin) { scheduleIssue = 'breakMin' }
+      else if (breakMin > 0 && (breakStart === null || breakStart < startSec || breakStart > endSec)) {
+        scheduleIssue = 'break'
       }
 
-      var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+      var hasBreak = !scheduleIssue && breakMin > 0 && breakStart < endSec
+      var bsSec = hasBreak ? breakStart : null
+      var beSec = hasBreak ? Math.min(bsSec + breakMin * 60, endSec) : null
+
+      var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000
       var nowPct = null
       var phase = 'unknown'
       if (ordered) {
@@ -805,9 +825,11 @@ window.__ModuleLoader__.load({
       var planned = null
       var worked = null
       var ratio = null
-      if (ordered) {
+      if (!scheduleIssue) {
         var p = (endSec - startSec) - (hasBreak ? (beSec - bsSec) : 0)
-        if (p > 0) {
+        if (p <= 0) {
+          scheduleIssue = 'net'
+        } else {
           var t = Math.min(Math.max(nowSec, startSec), endSec)
           var w = t - startSec
           if (hasBreak) { w -= Math.max(0, Math.min(t, beSec) - bsSec) }
@@ -820,13 +842,14 @@ window.__ModuleLoader__.load({
       return {
         hasStart: hasStart,
         hasEnd: hasEnd,
-        ordered: ordered,
+        scheduleIssue: scheduleIssue,
         startSec: startSec,
         endSec: endSec,
         hasBreak: hasBreak,
         bsSec: bsSec,
         beSec: beSec,
         nowPct: nowPct,
+        nowSec: nowSec,
         phase: phase,
         planned: planned,
         worked: worked,
@@ -835,99 +858,75 @@ window.__ModuleLoader__.load({
     }
 
     // ---------- core ----------
-    function compute(cfg, now) {
-      var startSec = toSec(cfg.start)
-      var endSec = toSec(cfg.end)
-      var bsSec = toSec(cfg.breakStart)
-      var bmSec = Math.max(0, Number(cfg.breakMin) || 0) * 60
-
-      if (endSec <= startSec) { endSec = startSec + 3600 }
-      if (bsSec < startSec) { bsSec = startSec }
-      if (bsSec > endSec) { bsSec = endSec }
-      var beSec = Math.min(bsSec + bmSec, endSec)
-      var netSec = Math.max(1, (endSec - startSec) - (beSec - bsSec))
-
-      // 工作日总数只来自日期规则（默认星期 + 用户覆盖），不再接受独立手填的总数。
+    function compute(cfg, now, tl) {
+      tl = tl || timelineOf(cfg, now)
       var ov = cfg.overrides || {}
       var totalWorkdays = monthWorkdays(now, ov)
-
-      var salary = Math.max(0, Number(cfg.salary) || 0)
-      var dayPay = totalWorkdays > 0 ? salary / totalWorkdays : 0
-      var doneDays0 = workdaysBeforeToday(now, ov)
-
-      // 排班不完整（时间缺失或写坏）：不猜时间，也不猜今天的收入。
-      // 今日按 0 计，月收入仍只累计已经走完的工作日 —— 不虚构、不出现负时长。
-      if (!validTime(cfg.start) || !validTime(cfg.end)) {
-        return {
-          status: 'rest',
-          incomplete: true,
-          dayPay: 0,
-          hourPay: 0,
-          secPay: 0,
-          todayEarn: 0,
-          worked: 0,
-          remain: 0,
-          overtime: 0,
-          progress: 0,
-          totalWorkdays: totalWorkdays,
-          autoWorkdays: autoWorkdays(now),
-          doneDays: doneDays0,
-          todayIsWorkday: false,
-          monthEarn: Math.min(salary, dayPay * doneDays0),
-          salary: salary,
-          netSec: 1
-        }
-      }
-
-      var secPay = dayPay / netSec
-
-      var nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000
-      // 今天是不是工作日同样只问 getDayType：把某个周末改成工作日后，
-      // 它就会像普通工作日一样参与计时与累计。
-      var restDay = getDayType(ov, now) === 'rest'
-      var worked = 0
-      var status = 'working'
-
-      if (restDay) {
-        status = 'rest'
-      } else if (nowSec < startSec) {
-        status = 'idle'
-      } else if (nowSec >= endSec) {
-        worked = netSec
-        status = nowSec - endSec > 60 ? 'overtime' : 'off'
-      } else if (nowSec < bsSec) {
-        worked = nowSec - startSec
-      } else if (nowSec < beSec) {
-        worked = bsSec - startSec
-        status = 'break'
-      } else {
-        worked = (bsSec - startSec) + (nowSec - beSec)
-      }
-
-      worked = Math.max(0, Math.min(worked, netSec))
-
-      var todayEarn = dayPay * (worked / netSec)
       var doneDays = workdaysBeforeToday(now, ov)
-      var monthEarn = Math.min(salary, dayPay * doneDays + todayEarn)
-
+      var restDay = getDayType(ov, now) === 'rest'
+      var scheduleValid = tl.planned > 0
+      var salary = Number(cfg.salary)
+      var incomeIssue = !scheduleValid || !validSalary(cfg.salary) ? 'pvNeedValid'
+        : totalWorkdays === 0 ? 'pvZeroDays' : ''
+      var dayPay = incomeIssue ? null : salary / totalWorkdays
+      var hourPay = incomeIssue ? null : dayPay / (tl.planned / 3600)
+      if (!incomeIssue && !Number.isFinite(hourPay)) {
+        incomeIssue = 'pvNeedValid'
+        dayPay = null
+        hourPay = null
+      }
+      var status = restDay ? 'rest' : 'working'
+      if (!restDay) {
+        if (!scheduleValid) { status = 'invalid' }
+        else if (tl.phase === 'before') { status = 'idle' }
+        else if (tl.phase === 'after') { status = 'off' }
+        else if (tl.hasBreak && tl.nowSec >= tl.bsSec && tl.nowSec < tl.beSec) { status = 'break' }
+      }
+      var worked = scheduleValid && !restDay ? tl.worked : 0
+      var progress = scheduleValid && !restDay ? tl.ratio : 0
+      var todayEarn = incomeIssue ? null : dayPay * progress
+      var monthEarn = incomeIssue ? null : Math.min(salary, Math.max(0, dayPay * doneDays + todayEarn))
       return {
         status: status,
+        incomeIssue: incomeIssue,
         dayPay: dayPay,
-        hourPay: dayPay / (netSec / 3600),
-        secPay: secPay,
+        hourPay: hourPay,
+        secPay: incomeIssue ? null : dayPay / tl.planned,
         todayEarn: todayEarn,
-        worked: worked,
-        remain: Math.max(0, netSec - worked),
-        overtime: restDay ? 0 : Math.max(0, nowSec - endSec),
-        progress: worked / netSec,
-        totalWorkdays: totalWorkdays,
-        autoWorkdays: autoWorkdays(now),
-        doneDays: doneDays,
-        todayIsWorkday: !restDay,
         monthEarn: monthEarn,
+        worked: worked,
+        remain: scheduleValid && !restDay ? tl.planned - worked : 0,
+        pastEnd: status === 'off' ? tl.nowSec - tl.endSec : 0,
+        progress: progress,
+        totalWorkdays: totalWorkdays,
+        doneDays: doneDays,
         salary: salary,
-        netSec: netSec
+        netSec: tl.planned
       }
+    }
+
+    function scheduleSignature(cfg, now) {
+      return JSON.stringify([toSec(cfg.start), toSec(cfg.end), getDayType(cfg.overrides, now)])
+    }
+
+    function readOvertime() {
+      try { return JSON.parse(localStorage.getItem(OVERTIME_KEY)) } catch (e) { return null }
+    }
+
+    function writeOvertime(entry, expired) {
+      try {
+        if (entry) { localStorage.setItem(OVERTIME_KEY, JSON.stringify(entry)) }
+        else if (!expired || JSON.stringify(readOvertime()) === JSON.stringify(expired)) {
+          localStorage.removeItem(OVERTIME_KEY)
+        }
+        return true
+      } catch (e) { return false }
+    }
+
+    function overtimeIsValid(entry, cfg, now, result) {
+      return !!entry && entry.active === true && entry.date === dateKey(now) &&
+        result.status === 'off' && entry.scheduleSignature === scheduleSignature(cfg, now) &&
+        typeof entry.confirmedAt === 'string' && Date.parse(entry.confirmedAt) <= now.getTime()
     }
 
     // ---------- 基础设置的草稿模型 ----------
@@ -948,31 +947,28 @@ window.__ModuleLoader__.load({
         a.breakStart === b.breakStart && a.breakMin === b.breakMin
     }
 
-    /** 返回错误码（对应 i18n 键与需要聚焦的输入框），空串表示通过。 */
-    function validateDraft(d) {
-      if (!(Number(d.salary) > 0)) { return 'salary' }
-      if (!validTime(d.start) || !validTime(d.end)) { return 'time' }
-      if (toSec(d.end) <= toSec(d.start)) { return 'order' }
-      if (toSec(d.breakStart) < toSec(d.start) || toSec(d.breakStart) > toSec(d.end)) { return 'break' }
-      var net = (toSec(d.end) - toSec(d.start)) - Math.max(0, Number(d.breakMin) || 0) * 60
-      if (net <= 0) { return 'net' }
-      return ''
+    function validSalary(value) {
+      return (typeof value === 'number' || typeof value === 'string') &&
+        Number.isFinite(Number(value)) && Number(value) > 0
     }
 
-    var ERR_KEY = { salary: 'errSalary', time: 'errTime', order: 'errOrder', break: 'errBreak', net: 'errNet' }
-    var ERR_FOCUS = { salary: 'salary', time: 'start', order: 'start', break: 'breakStart', net: 'breakMin' }
+    /** 返回错误码（对应 i18n 键与需要聚焦的输入框），空串表示通过。 */
+    function validateDraft(d) {
+      if (!validSalary(d.salary)) { return 'salary' }
+      return timelineOf(d, new Date()).scheduleIssue
+    }
 
-    /**
-     * 本地是否已经有一份「有效」的用户配置。
-     * 老用户升级时这里为 true —— 他们不该被首次引导拦一次，原配置也不能被覆盖。
-     */
+    var ERR_KEY = { salary: 'errSalary', time: 'errTime', order: 'errOrder', break: 'errBreak', breakMin: 'errBreakMin', net: 'errNet' }
+    var ERR_FOCUS = { salary: 'salary', time: 'start', order: 'start', break: 'breakStart', breakMin: 'breakMin', net: 'breakMin' }
+
+    // 已有本地配置时直接进入主界面，配置异常可以在基础设置中修正。
     function hasSavedConfig() {
       try {
         var raw = window.localStorage.getItem(STORE_KEY)
         if (!raw) { return false }
         var o = JSON.parse(raw)
         if (!o || typeof o !== 'object' || Array.isArray(o)) { return false }
-        return Number(o.salary) > 0 && validTime(o.start) && validTime(o.end)
+        return true
       } catch (e) { return false }
     }
 
@@ -1012,17 +1008,20 @@ window.__ModuleLoader__.load({
       '.nt-chip-line{display:inline-flex;align-items:center;gap:5px;min-width:0;flex:0 1 auto;overflow:hidden}',
       /* 与原生统计胶囊同一行时（dock 的 gap 已给 12px），胶囊只按内容占宽，
          不抢 flex 增长份额，也不允许原生的 activity/usage 被它挤出可视区。 */
-      '@media (max-width:640px){.nt-chip{font-size:12px;gap:7px;padding:3px 10px 4px}.nt-chip-val{font-size:13px}.nt-chip-sub{display:none}}',
+      '@media (max-width:640px){.nt-chip{font-size:12px;gap:7px;padding:3px 10px 4px}.nt-chip-val{font-size:13px}.nt-chip-sub:not(.nt-chip-estimate):not(.nt-end-status){display:none}}',
       /* 窄视口：胶囊必须能在 dock 里收缩。所有子项允许收缩 + 文本省略，
          先丢最不关键的信息（本月 → 倒计时徽章 → 进度小段），保证永不溢出。 */
       '.nt-chip{flex-wrap:nowrap}',
       /* 兜底：任何模式下所有子项都不许把胶囊撑出容器 */
       '.nt-chip>*{min-width:0}',
       '.nt-money.nt-chip-sub{overflow:hidden;text-overflow:ellipsis}',
+      // 窄屏下金额本身也允许收缩并截断：它是 flex 子项，不放开 min-width 时
+      // 内容比容器宽就会被整段裁掉（比省略号更糟）。
+      '.nt-money.nt-chip-val{min-width:0;overflow:hidden;text-overflow:ellipsis}',
       '.nt-chip-val{font-family:"DIN Alternate",ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:var(--nt-ink)}',
       '.nt-chip-sep{color:var(--nt-sep)}',
       '.nt-chip-sub{color:var(--nt-ink-3);white-space:nowrap}',
-      '.nt-caret{color:var(--nt-ink-4);font-size:10px;transform:translateY(1px)}',
+      '.nt-caret{flex:0 0 auto;color:var(--nt-ink-4);font-size:10px;line-height:1;transform:translateY(1px)}',
 
       /* ---------- 三种显示方案 ----------
          A 极简：一行 `● 今日已赚 ¥398.55 —— 70%`，金额与进度分列两端。
@@ -1049,7 +1048,7 @@ window.__ModuleLoader__.load({
 
       /* 趣味：单行横排 —— 🐮 标签 + 金额（加重）+ 倒计时红章 + 角标 */
       '.nt-chip--fun{gap:9px;padding:5px 14px 6px;background-color:var(--nt-paper-3);background-image:none}',
-      '.nt-chip--fun .nt-fun-label{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--nt-ink-3);letter-spacing:.5px;white-space:nowrap;flex:0 0 auto}',
+      '.nt-chip--fun .nt-fun-label{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--nt-ink-3);letter-spacing:.5px;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
       '.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:16px;font-weight:800}',
       '.nt-chip--fun .nt-fun-badge{flex:0 1 auto;min-width:0;padding:1px 9px;font-size:10.5px;letter-spacing:.4px;border-radius:999px;background:rgba(var(--nt-red-rgb),.15);color:var(--nt-red-ink);border:1px solid rgba(var(--nt-red-rgb),.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '.nt-chip--fun .nt-fun-badge.grey{background:rgba(var(--nt-ink-4-rgb),.13);color:var(--nt-ink-3);border-color:rgba(var(--nt-ink-4-rgb),.3)}',
@@ -1274,7 +1273,7 @@ window.__ModuleLoader__.load({
       '.nt-ob-note{margin:9px 0 0;font-size:10.5px;line-height:1.55;color:var(--nt-ink-5)}',
 
       /* ---- 「示例数据」标记 ---- */
-      '.nt-sample{font-size:9px;letter-spacing:.4px;padding:1px 5px;border-radius:2px;white-space:nowrap;color:var(--nt-orange-ink);background:rgba(var(--nt-orange-rgb),.14);border:1px solid rgba(var(--nt-orange-rgb),.38)}',
+      '.nt-sample{font-size:9px;letter-spacing:.4px;padding:1px 5px;border-radius:2px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--nt-orange-ink);background:rgba(var(--nt-orange-rgb),.14);border:1px solid rgba(var(--nt-orange-rgb),.38)}',
       /* ---- 轻提示 Toast ---- */
       /* 固定视口底部居中并 portal 到 body：胶囊隐藏、面板关闭时也照常可见。
          pointer-events:none 保证它永远不挡住输入框与主按钮。 */
@@ -1299,6 +1298,7 @@ window.__ModuleLoader__.load({
       '@media (max-width:340px){.nt-chip--full .nt-full-prog{display:none}.nt-chip--fun .nt-fun-badge{font-size:10px;padding:0 6px;max-width:9em;overflow:hidden;text-overflow:ellipsis}}',
       /* 趣味模式的倒计时徽章文字最长，窄屏让它先缩，不要把整条胶囊撑爆 */
       '@media (max-width:420px){.nt-chip--fun .nt-fun-badge{max-width:7.5em;overflow:hidden;text-overflow:ellipsis;min-width:0}.nt-chip--fun .nt-chip-val,.nt-chip--fun .nt-progress-lead{font-size:13px}}',
+      '@media (max-width:420px){.nt-chip[data-past-end] .nt-end-status{display:inline;order:0;flex:0 1 auto;min-width:0;max-width:10em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nt-chip[data-past-end] .nt-mini-track,.nt-chip[data-past-end] .nt-full-prog{display:none}.nt-chip[data-past-end] .nt-fun-label{flex:0 1 auto;min-width:0;overflow:hidden}}',
       '@media (max-width:260px){.nt-chip--full .nt-full-badge{display:none}.nt-chip--fun .nt-fun-badge{display:none}.nt-chip--mini .nt-mini-track{display:none}}',
 
       /* 时间轴与提醒条的窄屏降级（必须排在所有基础规则之后，否则会被覆盖）：
@@ -1309,7 +1309,18 @@ window.__ModuleLoader__.load({
       '@media (max-width:300px){.nt-tl-prog>span:first-child{white-space:normal}.nt-tl-known{gap:8px}}',
       '@media (max-width:420px){.nt-pv-grid{grid-template-columns:1fr}.nt-cal{gap:2px}.nt-cal-d{font-size:10px;padding:4px 0 5px}}',
       '@media (max-width:480px){.nt-toast{max-width:min(94vw,340px);font-size:12px}}',
-      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}.nt-cal-d{transition:none}.nt-toast{animation:none;transition:none}}'
+      '@media (prefers-reduced-motion:reduce){.nt-reminder{animation:none}.nt-cal-d{transition:none}.nt-toast{animation:none;transition:none}}',
+      /* 极窄：胶囊只剩金额与标签，展开箭头让位给内容（chip 本身是 button，
+         aria-expanded 仍然表达开合状态，键盘与读屏不受影响）。 */
+      '@media (max-width:340px){.nt-caret{display:none}}',
+      /* ≤460px 时极简/完整模式的进度条先让位：百分比仍在，但「已到计划下班时间」
+         这类状态文案是纯文字、无法再缩，优先保住它。 */
+      '@media (max-width:460px){.nt-chip--mini .nt-mini-track,.nt-chip--full .nt-full-track{display:none}}',
+      /* 到点后进度必然是 100%，百分比与进度条都是重复信息；把它们让给「已到计划下班时间」。 */
+      '@media (max-width:460px){.nt-chip[data-past-end] .nt-mini-track,.nt-chip[data-past-end] .nt-mini-pct,.nt-chip[data-past-end] .nt-full-prog{display:none}}',
+      /* 到点 + 窄屏时的取舍顺序：金额是核心，必须完整；状态文案次之，可省略号；
+         「今日预估」这类前缀标签信息量最低，先让位。 */
+      '@media (max-width:460px){.nt-chip[data-past-end] .nt-chip-estimate{display:none}.nt-chip[data-past-end] .nt-fun-label{display:none}.nt-chip[data-past-end] .nt-mini-main,.nt-chip[data-past-end] .nt-full-main{flex:0 0 auto}.nt-chip[data-past-end] .nt-money.nt-chip-val{flex:0 0 auto}.nt-chip[data-past-end] .nt-end-status{flex:0 1 auto;min-width:0;max-width:none}}'
     ].join('\n')
     // ---------- components ----------
     function Day(props) {
@@ -1337,7 +1348,9 @@ window.__ModuleLoader__.load({
           h('label', { htmlFor: 'nt-in-' + key }, label),
           h('input', {
             id: 'nt-in-' + key,
-            type: type,
+            type: key === 'salary' && cfg.hideMoney ? 'password' : type,
+            inputMode: key === 'salary' && cfg.hideMoney ? 'decimal' : undefined,
+            autoComplete: key === 'salary' ? 'off' : undefined,
             value: draft[key],
             step: extra && extra.step,
             min: extra && extra.min,
@@ -1375,6 +1388,7 @@ window.__ModuleLoader__.load({
             cfg: cfg,
             draft: draft,
             hideMoney: props.hideMoney,
+            isSample: props.isSample,
             now: props.now
           }),
 
@@ -1517,7 +1531,7 @@ window.__ModuleLoader__.load({
       var tl = props.tl
 
       var stateTxt = ''
-      if (tl.ordered) {
+      if (!tl.scheduleIssue) {
         if (props.rest) { stateTxt = T('stRest') }
         else if (tl.phase === 'before') { stateTxt = T('tlBefore') }
         else if (tl.phase === 'after') { stateTxt = T('tlAfter') }
@@ -1527,12 +1541,11 @@ window.__ModuleLoader__.load({
 
       var head = h('div', { className: 'nt-tl-head' },
         h('span', { className: 'nt-tl-title' }, T('tlTitle')),
-        h('span', { className: 'nt-tl-state' }, tl.ordered ? stateTxt : T('tlNoSchedule'))
+        h('span', { className: 'nt-tl-state' }, tl.scheduleIssue ? T('tlNoSchedule') : stateTxt)
       )
 
-      // 时间配不全：只列已知节点。没有量程就不画刻度、不算百分比——
-      // 假的 0% / 负时长 / 错倒计时比空白更糟。
-      if (!tl.ordered) {
+      // 排班不可用时保留已知节点，隐藏时间轴进度。
+      if (tl.scheduleIssue) {
         var known = []
         if (tl.hasStart) { known.push(h('span', { key: 's' }, T('tlStart') + ' ' + cfg.start)) }
         if (tl.hasEnd) { known.push(h('span', { key: 'e' }, T('tlEnd') + ' ' + cfg.end)) }
@@ -1819,8 +1832,7 @@ window.__ModuleLoader__.load({
     }
 
     // ---------- 实时计算预览 ----------
-    // 只读草稿，不写盘。所有数字都来自 compute()——和正式仪表盘同一个函数，
-    // 所以「预览里看到的」和「保存后看到的」不可能对不上。
+    // 预览与正式仪表盘共用计算结果，草稿在保存前仅用于预览。
     function Preview(props) {
       var T = props.T
       var draft = props.draft
@@ -1828,44 +1840,41 @@ window.__ModuleLoader__.load({
       var now = props.now
 
       var draftCfg = mergeCfg(props.cfg, {
-        salary: Number(draft.salary) || 0,
+        salary: draft.salary,
         start: draft.start,
         end: draft.end,
         breakStart: draft.breakStart,
-        breakMin: Math.max(0, Number(draft.breakMin) || 0)
+        breakMin: draft.breakMin
       })
       var pr = compute(draftCfg, now)
 
-      var badTimes = !validTime(draft.start) || !validTime(draft.end) ||
-        toSec(draft.end) <= toSec(draft.start)
-      var badSalary = !(Number(draft.salary) > 0)
-
-      var body
-      if (badTimes || badSalary) {
-        body = h('p', { className: 'nt-pv-warn' }, T('pvNeedValid'))
-      } else if (!(pr.totalWorkdays > 0)) {
-        body = h('p', { className: 'nt-pv-warn' }, T('pvZeroDays'))
-      } else {
-        function item(key, label, value) {
-          return h('div', { key: key, className: 'nt-pv-item' },
-            h('span', { className: 'nt-pv-k' }, label),
-            h('span', { className: 'nt-pv-v' }, value))
-        }
-        var moneyCell = function (v) { return hideMoney ? T('pvHidden') : '¥' + v }
-        body = h('div', { className: 'nt-pv-grid' },
-          item('wd', T('pvWorkdays'), String(pr.totalWorkdays)),
-          item('net', T('pvNet'), durTxt(pr.netSec, T)),
-          item('day', T('pvDayPay'), moneyCell(money(pr.dayPay))),
-          item('hour', T('pvHourPay'), moneyCell(pr.hourPay.toFixed(1))),
-          item('sec', T('pvSecPay'), moneyCell(pr.secPay.toFixed(4)))
-        )
+      function item(key, label, value) {
+        return h('div', { key: key, className: 'nt-pv-item' },
+          h('span', { className: 'nt-pv-k' }, label),
+          h('span', { className: 'nt-pv-v' }, value))
       }
+      var body = h('div', null,
+        pr.incomeIssue ? h('p', { className: 'nt-pv-warn' }, T(pr.incomeIssue)) : null,
+        h('div', { className: 'nt-pv-grid' },
+          item('wd', T('pvWorkdays'), String(pr.totalWorkdays)),
+          item('net', T('pvNet'), pr.netSec ? durTxt(pr.netSec, T) : '—'),
+          !hideMoney ? item('today', T('title'), currency(pr.todayEarn)) : null,
+          !hideMoney ? item('month', T('monthTotal'), currency(pr.monthEarn)) : null,
+          !hideMoney ? item('day', T('pvDayPay'), currency(pr.dayPay)) : null,
+          !hideMoney ? item('hour', T('pvHourPay'), currency(pr.hourPay, 1)) : null,
+          !hideMoney ? item('sec', T('pvSecPay'), currency(pr.secPay, 4)) : null
+        ),
+        /* 隐藏金额时金额行整行不渲染，这里说明一句，免得只剩两行让人以为预览坏了。
+           与面板里“金额已隐藏”的既有处理方式一致。 */
+        hideMoney ? h('p', { className: 'nt-note' }, T('pvHidden')) : null)
 
       return h('div', { className: 'nt-pv' },
         h('div', { className: 'nt-pv-head' },
           h('span', { className: 'nt-pv-title' }, T('pvTitle')),
           h('span', { className: 'nt-pv-badge' }, T('pvBadge'))),
-        body
+        props.isSample ? h('span', { className: 'nt-sample' }, T('obSampleBadge')) : null,
+        body,
+        h('p', { className: 'nt-note' }, T('estimateNote'), ' ', T('recalcNote'))
       )
     }
 
@@ -1923,7 +1932,9 @@ window.__ModuleLoader__.load({
         return h('div', { className: 'nt-field' },
           h('label', null, label),
           h('input', {
-            type: type,
+            type: key === 'salary' && cfg.hideMoney ? 'password' : type,
+            inputMode: key === 'salary' && cfg.hideMoney ? 'decimal' : undefined,
+            autoComplete: key === 'salary' ? 'off' : undefined,
             value: d[key],
             step: extra && extra.step,
             min: extra && extra.min,
@@ -1933,13 +1944,8 @@ window.__ModuleLoader__.load({
       }
 
       function validate() {
-        if (!(Number(d.salary) > 0)) { return T('errSalary') }
-        if (!validTime(d.start) || !validTime(d.end)) { return T('errTime') }
-        if (toSec(d.end) <= toSec(d.start)) { return T('errOrder') }
-        if (toSec(d.breakStart) < toSec(d.start) || toSec(d.breakStart) > toSec(d.end)) { return T('errBreak') }
-        var net = (toSec(d.end) - toSec(d.start)) - Math.max(0, Number(d.breakMin) || 0) * 60
-        if (net <= 0) { return T('errNet') }
-        return ''
+        var code = validateDraft(d)
+        return code ? T(ERR_KEY[code]) : ''
       }
 
       function next() {
@@ -1970,7 +1976,7 @@ window.__ModuleLoader__.load({
       } else {
         content = h('div', null,
           h('div', { className: 'nt-ob-summary' },
-            h('b', null, T('obSummary', {
+            h('b', null, T(cfg.hideMoney ? 'obScheduleSummary' : 'obSummary', {
               s: money(Number(d.salary) || 0),
               a: d.start,
               b: d.end,
@@ -2100,6 +2106,12 @@ window.__ModuleLoader__.load({
       var tickState = React.useState(function () { return Date.now() })
       var tick = tickState[0]
       var setTick = tickState[1]
+      var overtimeState = React.useState(readOvertime)
+      var overtime = overtimeState[0]
+      var setOvertime = overtimeState[1]
+      var sessionState = React.useState(false)
+      var sessionOnly = sessionState[0]
+      var setSessionOnly = sessionState[1]
       // 草稿放在这里而不是 Settings 里面：切分区、关面板都不会丢，
       // 「继续编辑」才能真的回到原处；「放弃修改」只要重设草稿即可。
       var draftState = React.useState(function () { return draftOf(readCfg()) })
@@ -2185,48 +2197,91 @@ window.__ModuleLoader__.load({
       var T = function (key, vars) { return tr(locale, key, vars) }
 
       var now = new Date(tick)
-      var r = compute(cfg, now)
       var tl = timelineOf(cfg, now)
-      var statusKey = !tl.ordered ? 'tlNoSchedule' : r.status === 'working' ? 'stWorking'
-        : r.status === 'break' ? 'stBreak'
-          : r.status === 'off' ? 'stOff'
-            : r.status === 'overtime' ? 'stOvertime'
-              : r.status === 'idle' ? 'stIdle' : 'stRest'
-      var stampClass = 'nt-stamp' + (!tl.ordered ? ' grey' : r.status === 'break' ? ' blue' : r.status === 'off' ? ' green'
-        : (r.status === 'idle' || r.status === 'rest') ? ' grey' : '')
-
-      // 金额隐藏只有一个开关：所有展示层（胶囊、面板、副标题、脚注、预览）都读它。
+      var r = compute(cfg, now, tl)
+      var active = overtimeIsValid(overtime, cfg, now, r)
+      var statusKey = active ? 'stOvertime' : {
+        working: 'stWorking', break: 'stBreak', off: 'stOff', idle: 'stIdle',
+        rest: 'stRest', invalid: 'tlNoSchedule'
+      }[r.status]
+      var stampClass = 'nt-stamp' + (r.status === 'break' ? ' blue' : r.status === 'off' ? ' green'
+        : r.status === 'working' ? '' : ' grey')
       var moneyHidden = cfg.hideMoney === true
-      // 主题只在这里解析一次，之后所有浮层根节点都用同一个 data-nt。
       var nt = resolveTheme(cfg.theme, sysDark)
-
-      var subLine
-      if (!tl.ordered) { subLine = T('tlNeedTimes') }
-      else if (r.status === 'rest') { subLine = T('restLine') }
-      else if (r.status === 'idle') { subLine = T('idleLine', { t: cfg.start }) }
-      else if (r.status === 'overtime') {
-        subLine = moneyHidden
-          ? T('otLineHid', { b: durTxt(r.overtime, T) })
-          : T('otLine', { a: money(r.dayPay), b: durTxt(r.overtime, T) })
-      } else if (r.status === 'off') {
-        subLine = moneyHidden ? T('offLineHid') : T('offLine', { v: money(r.dayPay) })
-      } else { subLine = T('workedLine', { a: durTxt(r.worked, T), b: durTxt(r.remain, T) }) }
-
-      var capped = r.status === 'off' || r.status === 'overtime' || r.status === 'rest'
-      var monthRatio = r.salary > 0 ? r.monthEarn / r.salary : 0
-
-      // 超时状态：持续显示的一行，不是弹窗，也不参与任何收入计算。
-      var otOn = cfg.notify.overtime === true
-      var otMins = Math.floor(r.overtime / 60)
-      var otLine = (otOn && r.status === 'overtime' && r.overtime > 0)
-        ? h('div', { className: 'nt-ot' },
-          h('span', null, otMins < 1 ? T('otJustNow') : T('otOvertime', { n: otMins })))
+      var subLine = r.incomeIssue ? T(r.incomeIssue)
+        : r.status === 'rest' ? T('restLine')
+          : r.status === 'idle' ? T('idleLine', { t: cfg.start })
+            : r.status === 'off' ? T('offLineHid')
+              : T('workedLine', { a: durTxt(r.worked, T), b: durTxt(r.remain, T) })
+      var capped = r.status === 'off' || r.status === 'rest'
+      var monthRatio = r.incomeIssue ? null : r.monthEarn / r.salary
+      var pastEndMins = Math.floor(r.pastEnd / 60)
+      var otLine = cfg.notify.overtime && r.status === 'off' && r.pastEnd > 0
+        ? h('div', { className: 'nt-ot' }, pastEndMins < 1
+          ? T('otJustNow') : T('otOvertime', { n: pastEndMins }))
         : null
+
+      React.useEffect(function () {
+        if (overtime != null && !active) {
+          writeOvertime(null, overtime)
+          setOvertime(null)
+          setSessionOnly(false)
+        }
+      }, [overtime, active])
+
+      React.useEffect(function () {
+        function onStorage(e) {
+          if (e.key === OVERTIME_KEY || e.key === null) {
+            setOvertime(readOvertime())
+            setSessionOnly(false)
+          }
+          if (e.key === STORE_KEY || e.key === null) {
+            var saved = readCfg()
+            setDraft(function (previous) {
+              return sameDraft(previous, draftOf(cfg)) ? draftOf(saved) : previous
+            })
+            setCfg(saved)
+          }
+        }
+        window.addEventListener('storage', onStorage)
+        return function () { window.removeEventListener('storage', onStorage) }
+      }, [cfg])
+
+      function toggleOvertime() {
+        var clicked = new Date()
+        var result = compute(cfg, clicked)
+        setTick(clicked.getTime())
+        if (overtimeIsValid(overtime, cfg, clicked, result)) {
+          var cleared = writeOvertime(null)
+          setOvertime(null)
+          setSessionOnly(false)
+          showToast(T('otStopped') + (cleared ? '' : ' ' + T('otClearFailed')), cleared ? undefined : 'err')
+        } else if (result.status === 'off') {
+          var entry = {
+            active: true,
+            date: dateKey(clicked),
+            scheduleSignature: scheduleSignature(cfg, clicked),
+            confirmedAt: clicked.toISOString()
+          }
+          var saved = writeOvertime(entry)
+          setOvertime(entry)
+          setSessionOnly(!saved)
+          showToast(T(saved ? 'otStarted' : 'otSession'))
+        }
+      }
+
+      var overtimeControls = r.status === 'off' ? h('div', { className: 'nt-actions' },
+        active ? h('span', { className: 'nt-note' }, T('otConfirmed', {
+          n: Math.floor((tick - Date.parse(overtime.confirmedAt)) / 60000)
+        }), sessionOnly ? ' ' + T('otSession') : '') : null,
+        h('button', { className: 'nt-btn', type: 'button', onClick: toggleOvertime },
+          T(active ? 'otStop' : 'otStart'))
+      ) : null
 
       // 下班保护：跟着 500ms 的 tick 判断一次。命中就写进「今天已响」账本，
       // 同一类型同一自然日只响一次；休息日、时间不全、开关关着都不触发。
       React.useEffect(function () {
-        if (r.status === 'rest') { return }
+        if (r.status === 'rest' || r.status === 'invalid') { return }
         if (!validTime(cfg.start) || !validTime(cfg.end)) { return }
         var endSec = toSec(cfg.end)
         if (!(endSec > toSec(cfg.start))) { return }
@@ -2260,8 +2315,8 @@ window.__ModuleLoader__.load({
         writeFired(nextFired)
         setFired(nextFired)
         setBanner(hit)
-        systemNotify(T('title'), hit.text)
-      }, [tick, fired, r.status])
+        systemNotify(T('notifyTitle'), hit.text)
+      }, [tick, fired, cfg, r.status])
 
       // 点阵同样只问 getDayType：改成工作日的周末会亮，改成休息日的工作日会空。
       var ovMap = cfg.overrides || {}
@@ -2277,7 +2332,7 @@ window.__ModuleLoader__.load({
 
       // ---------- 分区切换与未保存保护 ----------
       var dirty = !sameDraft(draft, draftOf(cfg))
-      var isSample = cfg.onboard === 'skipped'
+      var isSample = showGuide || cfg.onboard === 'skipped'
 
       function applySection(section) {
         setAskLeave(false)
@@ -2434,15 +2489,15 @@ window.__ModuleLoader__.load({
       var show = cfg.fields
       var badgeClass = r.status === 'working' ? '' : (r.status === 'break' ? 'red' : 'grey')
       var remainTxt = durTxt(r.remain, T)
-      var doneish = r.status === 'off' || r.status === 'overtime' || r.status === 'rest'
+      var showEndStatus = r.status === 'off'
 
       // 隐藏金额时，金额原本的位置交给进度百分比——「只显示工作进度」要真的看得见进度，
       // 而不是留一块空白；aria-label 同样不该再把金额念出来。
       var amountNode = show.amount && !moneyHidden
-        ? h('span', { key: 'amount', className: 'nt-money nt-chip-val' }, '¥' + money(r.todayEarn))
+        ? h('span', { key: 'amount', className: 'nt-money nt-chip-val' }, currency(r.todayEarn))
         : null
       var monthNode = show.month && !moneyHidden
-        ? h('span', { key: 'month', className: 'nt-chip-sub nt-money' }, T('chipMonth', { v: money(r.monthEarn) }))
+        ? h('span', { key: 'month', className: 'nt-chip-sub nt-money' }, T('chipMonth', { v: currency(r.monthEarn) }))
         : null
       var progressNode = show.progress
         ? h('span', { key: 'progress', className: 'nt-chip-sub' }, T('chipToday', { p: pct }))
@@ -2456,9 +2511,10 @@ window.__ModuleLoader__.load({
         chipInner = [
           h('span', { key: 'main', className: 'nt-mini-main' },
             h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
-            h('span', { className: 'nt-chip-sub' }, T('miniToday')),
+            amountNode ? h('span', { className: 'nt-chip-sub nt-chip-estimate' }, T('miniToday')) : null,
             amountNode
           ),
+          showEndStatus ? h('span', { key: 'status', className: 'nt-chip-sub nt-end-status' }, T(statusKey)) : null,
           h('span', { key: 'track', className: 'nt-mini-track' },
             h('span', { className: 'nt-mini-fill', style: { width: pct + '%' } })),
           h('span', { key: 'pct', className: 'nt-mini-pct' }, pctText),
@@ -2467,18 +2523,15 @@ window.__ModuleLoader__.load({
       } else if (cfg.mode === 'fun') {
         // C · 趣味（单行）：`🐮 今日打工收益 ¥398.55 [距离解放还有 2 小时] ▼`
         chipInner = [
-          h('span', { key: 'label', className: 'nt-fun-label' }, '🐮 ', T('funLabel')),
+          h('span', { key: 'label', className: 'nt-fun-label' }, '🐮', amountNode ? ' ' + T('funLabel') : ''),
           primaryNode,
-          show.remain
+          (show.remain || showEndStatus)
             ? h('span', {
               key: 'badge',
-              className: 'nt-fun-badge' + (doneish ? ' grey' : ''),
-              // 悬停/读屏保留原来那两句状态文案
-              title: doneish ? T('funFrozen') : T('funTicking')
-            },
-            r.status === 'overtime'
-              ? T('remainBadgeOt', { t: durTxt(r.overtime, T) })
-              : T(doneish ? 'remainBadgeDone' : 'remainBadge', { t: remainTxt }))
+              className: 'nt-fun-badge' + (showEndStatus || r.status === 'rest' ? ' grey' : '') +
+                (showEndStatus ? ' nt-end-status' : '')
+            }, showEndStatus || r.status === 'rest' || r.status === 'invalid'
+              ? T(statusKey) : T('remainBadge', { t: remainTxt }))
             : null,
           h('span', { key: 'caret', className: 'nt-caret' }, open ? '▲' : '▼')
         ]
@@ -2488,14 +2541,12 @@ window.__ModuleLoader__.load({
         chipInner = [
           h('span', { key: 'main', className: 'nt-full-main' },
             h('span', { className: 'nt-dot' + (r.status === 'working' ? ' live' : ' idle') }),
-            h('span', { className: 'nt-chip-sub' }, T('chipLabel')),
+            amountNode ? h('span', { className: 'nt-chip-sub nt-chip-estimate' }, T('chipLabel')) : null,
             primaryNode
           ),
-          show.status
-            ? h('span', { key: 'badge', className: 'nt-full-badge ' + badgeClass },
-              (otOn && r.status === 'overtime')
-                ? T('otBadge', { n: Math.max(1, otMins) })
-                : T(statusKey))
+          (show.status || showEndStatus)
+            ? h('span', { key: 'badge', className: 'nt-full-badge ' + badgeClass +
+              (showEndStatus ? ' nt-end-status' : '') }, T(statusKey))
             : null,
           (show.progress && !moneyHidden && amountNode)
             ? h('span', { key: 'prog', className: 'nt-full-prog' },
@@ -2508,6 +2559,9 @@ window.__ModuleLoader__.load({
         ]
       }
 
+      if (isSample) {
+        chipInner.unshift(h('span', { key: 'sample', className: 'nt-sample' }, T('obSampleBadge')))
+      }
       var chipTitle = T('title') + (moneyHidden ? ' · ' + T('moneyHidden') : '')
       if (isSample) { chipTitle = chipTitle + ' · ' + T('sampleTip') }
 
@@ -2517,9 +2571,12 @@ window.__ModuleLoader__.load({
         role: 'button',
         tabIndex: 0,
         'aria-expanded': open,
-        'aria-label': T('title') + ' ' + (moneyHidden ? pctText : ('¥' + money(r.todayEarn) + ' ' + pctText)),
+        'aria-label': [isSample ? T('obSampleBadge') : '', T('title'),
+          amountNode ? currency(r.todayEarn) : '', pctText, T(statusKey),
+          r.incomeIssue ? T(r.incomeIssue) : ''].filter(Boolean).join(' · '),
         'data-hide-money': moneyHidden ? 'true' : 'false',
         'data-density': cfg.density,
+        'data-past-end': showEndStatus ? 'true' : undefined,
         title: chipTitle,
         onClick: toggle,
         onKeyDown: onKeyDown
@@ -2547,44 +2604,46 @@ window.__ModuleLoader__.load({
           moneyHidden
             ? h('div', { className: 'nt-amount nt-amount-hid' }, h('span', { className: 'val' }, '•••'))
             : h('div', { className: 'nt-amount' },
-              h('span', { className: 'cur' }, '¥'),
+              Number.isFinite(r.todayEarn) ? h('span', { className: 'cur' }, '¥') : null,
               h('span', { className: 'val' }, money(r.todayEarn))),
 
-          (!moneyHidden && tl.ordered)
+          (!moneyHidden && !r.incomeIssue)
             ? h('div', { className: 'nt-rate' }, capped ? T('capped') : T('perSec', { v: r.secPay.toFixed(4) }))
             : null,
           h('div', { className: 'nt-sub' }, subLine),
+          h('p', { className: 'nt-note' }, T('estimateNote'), ' ', T('recalcNote')),
 
-          tl.ordered ? h('div', { className: 'nt-bar' },
+          r.netSec ? h('div', { className: 'nt-bar' },
             h('div', { className: 'nt-fill', style: { width: Math.round(Math.min(1, r.progress) * 100) + '%' } })) : null,
-          tl.ordered ? h('div', { className: 'nt-barnote' },
+          r.netSec ? h('div', { className: 'nt-barnote' },
             h('span', null, T('progress', { p: (r.progress * 100).toFixed(1) })),
-            h('span', null, (r.status === 'off' || r.status === 'overtime' || r.status === 'rest') ? T('finished') : T('remain', { t: clockTxt(r.remain) }))
+            h('span', null, r.status === 'rest' ? T('stRest') : r.status === 'off' ? T('finished') : T('remain', { t: clockTxt(r.remain) }))
           ) : null,
 
           h(Timeline, { T: T, cfg: cfg, tl: tl, rest: r.status === 'rest', status: r.status }),
           otLine,
+          overtimeControls,
 
           moneyHidden
             ? h('p', { className: 'nt-hint', style: { margin: '2px 0 0' } }, T('moneyHiddenNote'))
             : h('div', { className: 'nt-meta' },
               h('div', { className: 'cell' },
                 h('span', { className: 'k' }, T('dayPay')),
-                h('span', { className: 'v' }, '¥' + money(r.dayPay))),
+                h('span', { className: 'v' }, currency(r.dayPay))),
               h('div', { className: 'cell' },
                 h('span', { className: 'k' }, T('hourPay')),
-                h('span', { className: 'v' }, '¥' + r.hourPay.toFixed(1))),
+                h('span', { className: 'v' }, currency(r.hourPay, 1))),
               h('div', { className: 'cell' },
                 h('span', { className: 'k' }, T('secPay')),
-                h('span', { className: 'v' }, '¥' + r.secPay.toFixed(4)))
+                h('span', { className: 'v' }, currency(r.secPay, 4)))
             ),
 
           h('span', { className: 'nt-dot-title' }, T('dots')),
           h('div', { className: 'nt-dots' }, dots),
 
           h('div', { className: 'nt-foot' },
-            h('span', null, (moneyHidden ? '' : T('monthTotal') + ' ¥' + money(r.monthEarn) + ' · ') +
-              T('monthRatio', { p: (monthRatio * 100).toFixed(1) })),
+            !moneyHidden ? h('span', null, T('monthTotal'), ' ', currency(r.monthEarn),
+              monthRatio === null ? '' : ' · ' + T('monthRatio', { p: (monthRatio * 100).toFixed(1) })) : null,
             h('span', { className: 'nt-foot-actions' },
               secBtn(T('edit'), 'form', showForm),
               secBtn(T('displayTitle'), 'display', showDisplay),
@@ -2601,6 +2660,7 @@ window.__ModuleLoader__.load({
             saved: savedFlag,
             dirty: dirty,
             hideMoney: moneyHidden,
+            isSample: isSample,
             onEdit: onEdit,
             onSubmit: saveDraft,
             onSetDay: setDayType

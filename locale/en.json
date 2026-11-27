@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Niuma Work-Yield Timer",
-    "description": "Keep today's work time and pay visible in one glance: live timer with daily-pay conversion, a read-only today timeline, end-of-day reminders, a work calendar with one consistent workday definition, and a configurable single-line mini dashboard. Supports auto, light and dark themes, gives short feedback for important actions, guides first-time setup and lets you safely discard an edit you did not mean."
+    "description": "Estimate daily and monthly earnings from current pay and planned hours. Includes a work calendar, end-of-day reminders, and an opt-in overtime timer. Settings stay on this device."
   }
 }

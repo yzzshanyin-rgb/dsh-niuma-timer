@@ -1,9 +1,9 @@
 {
   "name": "dsh-niuma-timer",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": false,
   "type": "module",
-  "description": "DSH 插件 · 牛马费用计时器：工作计时、日薪换算、今日时间轴、下班保护与工作日历，配可配置的迷你仪表盘、工作日口径统一、首次引导、实时预览与未保存保护，支持跟随系统 / 浅色 / 深色三种主题，每个重要操作都有轻量反馈。全程零第三方运行时依赖。",
+  "description": "DSH 插件 · 按月薪与计划工时实时预估收入，提供工作日历、下班提醒与主动加班计时。浏览器本地运行，零第三方运行时依赖。",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -17,7 +17,9 @@
     "locale/*.json",
     "icon.svg",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "scripts/check-version.js"
   ],
   "keywords": [
     "dsh",
@@ -56,5 +58,9 @@
   "bugs": {
     "url": "https://github.com/yzzshanyin-rgb/dsh-niuma-timer/issues"
   },
-  "author": "yzzshanyin-rgb"
+  "author": "yzzshanyin-rgb",
+  "scripts": {
+    "check:version": "node scripts/check-version.js",
+    "prepack": "npm run check:version"
+  }
 }
